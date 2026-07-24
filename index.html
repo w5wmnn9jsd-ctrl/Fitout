@@ -550,6 +550,7 @@ html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
   transition: transform .8s var(--ease-soft);
 }
 .project-card:hover .project-card__img img{ transform: scale(1.06); }
+.project-card__img img.th-gallery-hidden{ opacity: 0 !important; }
 .project-card__view{
   position: absolute; left: 1.4rem; bottom: 1.4rem; z-index: 2;
   font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
@@ -1993,6 +1994,305 @@ try {
 
 } catch (err) {
   console.error('TH hero shader failed to initialize; CSS gradient fallback remains visible:', err);
+}
+
+/* ============================================================
+   GALLERY DISTORTION (projects section)
+   Nested in its own try/catch so a failure here can never
+   affect the hero shader above, and so the fallback (restoring
+   img opacity) still runs even if hero setup failed first.
+============================================================ */
+try {
+
+  var galleryImgs = Array.prototype.slice.call(
+    document.querySelectorAll('.project-card__img img')
+  );
+
+  if (galleryImgs.length) {
+
+    var galleryReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function gallerySkip(){
+      return galleryReduceMotion || window.innerWidth < 768;
+    }
+
+    function setGalleryImgOpacity(val){
+      galleryImgs.forEach(function(img){
+        if (val === 0) { img.classList.add('th-gallery-hidden'); }
+        else { img.classList.remove('th-gallery-hidden'); }
+      });
+    }
+
+    var galleryCanvas = null;
+    var galleryRenderer = null;
+    var galleryScene = null;
+    var galleryCamera = null;
+    var galleryPlanes = [];
+    var galleryGeometry = null;
+    var galleryActive = false;
+    var galleryIsVisible = true;
+    var galleryRafId = null;
+    var galleryClock = null;
+    var galleryTime = 0;
+    var gallerySmoothVelocity = 0;
+    var galleryObserver = null;
+
+    var galleryVertexShader = [
+      'varying vec2 vUv;',
+      'void main(){',
+      '  vUv = uv;',
+      '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+      '}'
+    ].join('\n');
+
+    var galleryFragmentShader = [
+      'precision highp float;',
+      'uniform sampler2D uTexture;',
+      'uniform float uHover;',
+      'uniform vec2 uHoverPos;',
+      'uniform float uTime;',
+      'uniform float uScrollVelocity;',
+      'uniform vec2 uCoverScale;',
+      'uniform vec2 uCoverOffset;',
+      'varying vec2 vUv;',
+      'void main(){',
+      '  vec2 uv = vUv * uCoverScale + uCoverOffset;',
+      '  vec2 toMouse = uv - uHoverPos;',
+      '  float dist = length(toMouse);',
+      '  float rippleMask = smoothstep(0.55, 0.0, dist);',
+      '  float ripple = sin(dist * 36.0 - uTime * 5.0) * 0.018 * uHover * rippleMask;',
+      '  vec2 dir = dist > 0.0001 ? normalize(toMouse) : vec2(0.0);',
+      '  uv += dir * ripple;',
+      '  float vel = clamp(uScrollVelocity, -40.0, 40.0);',
+      '  float warp = vel * 0.0006;',
+      '  uv.y += warp * sin(uv.x * 3.14159265);',
+      '  float splitAmt = vel * 0.0018;',
+      '  float r = texture2D(uTexture, uv + vec2(splitAmt, 0.0)).r;',
+      '  float g = texture2D(uTexture, uv).g;',
+      '  float b = texture2D(uTexture, uv - vec2(splitAmt, 0.0)).b;',
+      '  gl_FragColor = vec4(r, g, b, 1.0);',
+      '}'
+    ].join('\n');
+
+    function teardownGallery(){
+      if (galleryRafId !== null) { cancelAnimationFrame(galleryRafId); galleryRafId = null; }
+      if (galleryObserver) { galleryObserver.disconnect(); galleryObserver = null; }
+
+      galleryPlanes.forEach(function(p){
+        p.imgWrap.removeEventListener('mousemove', p.onMove);
+        p.imgWrap.removeEventListener('mouseleave', p.onLeave);
+        if (p.material) {
+          if (p.material.uniforms.uTexture.value) p.material.uniforms.uTexture.value.dispose();
+          p.material.dispose();
+        }
+      });
+      galleryPlanes = [];
+
+      if (galleryGeometry) { galleryGeometry.dispose(); galleryGeometry = null; }
+      if (galleryRenderer) { galleryRenderer.dispose(); galleryRenderer = null; }
+      if (galleryCanvas && galleryCanvas.parentNode) { galleryCanvas.parentNode.removeChild(galleryCanvas); }
+      galleryCanvas = null;
+      galleryScene = null;
+      galleryCamera = null;
+      galleryActive = false;
+
+      setGalleryImgOpacity(1);
+    }
+
+    function galleryResizeCamera(){
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      galleryCamera.left = 0;
+      galleryCamera.right = w;
+      galleryCamera.top = h;
+      galleryCamera.bottom = 0;
+      galleryCamera.updateProjectionMatrix();
+      galleryRenderer.setSize(w, h, false);
+      galleryCanvas.style.width = w + 'px';
+      galleryCanvas.style.height = h + 'px';
+    }
+
+    function galleryRenderFrame(){
+      var delta = galleryClock.getDelta();
+      galleryTime += delta;
+
+      var velocity = window.TH.scrollVelocity || 0;
+      gallerySmoothVelocity += (velocity - gallerySmoothVelocity) * 0.12;
+
+      galleryPlanes.forEach(function(p){
+        var rect = p.imgWrap.getBoundingClientRect();
+        if (!rect.width || !rect.height) { p.mesh.visible = false; return; }
+        p.mesh.visible = true;
+
+        p.mesh.position.set(
+          rect.left + rect.width / 2,
+          window.innerHeight - (rect.top + rect.height / 2),
+          0
+        );
+        p.mesh.scale.set(rect.width, rect.height, 1);
+
+        p.hoverEase += (p.targetHover - p.hoverEase) * 0.1;
+        p.hoverPosEase.x += (p.targetHoverPos.x - p.hoverPosEase.x) * 0.15;
+        p.hoverPosEase.y += (p.targetHoverPos.y - p.hoverPosEase.y) * 0.15;
+
+        p.material.uniforms.uHover.value = p.hoverEase;
+        p.material.uniforms.uHoverPos.value.copy(p.hoverPosEase);
+        p.material.uniforms.uTime.value = galleryTime;
+        p.material.uniforms.uScrollVelocity.value = gallerySmoothVelocity;
+      });
+
+      galleryRenderer.render(galleryScene, galleryCamera);
+    }
+
+    function galleryLoop(){
+      if (!galleryIsVisible) { galleryRafId = null; return; }
+      galleryRenderFrame();
+      galleryRafId = requestAnimationFrame(galleryLoop);
+    }
+
+    function setupGallery(){
+      if (galleryActive || gallerySkip()) { return; }
+
+      galleryCanvas = document.createElement('canvas');
+      galleryCanvas.setAttribute('aria-hidden', 'true');
+      galleryCanvas.style.position = 'fixed';
+      galleryCanvas.style.top = '0';
+      galleryCanvas.style.left = '0';
+      galleryCanvas.style.pointerEvents = 'none';
+      galleryCanvas.style.zIndex = '5';
+      document.body.appendChild(galleryCanvas);
+
+      galleryRenderer = new THREE.WebGLRenderer({ canvas: galleryCanvas, antialias: true, alpha: true });
+      galleryRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      galleryScene = new THREE.Scene();
+      galleryCamera = new THREE.OrthographicCamera(0, window.innerWidth, window.innerHeight, 0, 0.1, 1000);
+      galleryCamera.position.z = 10;
+      galleryResizeCamera();
+
+      galleryGeometry = new THREE.PlaneGeometry(1, 1);
+      galleryClock = new THREE.Clock();
+
+      var textureLoader = new THREE.TextureLoader();
+      textureLoader.crossOrigin = 'anonymous';
+
+      galleryImgs.forEach(function(imgEl){
+        var imgWrap = imgEl.parentElement;
+        var url = imgEl.currentSrc || imgEl.src;
+
+        var uniforms = {
+          uTexture: { value: null },
+          uHover: { value: 0 },
+          uHoverPos: { value: new THREE.Vector2(0.5, 0.5) },
+          uTime: { value: 0 },
+          uScrollVelocity: { value: 0 },
+          uCoverScale: { value: new THREE.Vector2(1, 1) },
+          uCoverOffset: { value: new THREE.Vector2(0, 0) }
+        };
+
+        var material = new THREE.ShaderMaterial({
+          uniforms: uniforms,
+          vertexShader: galleryVertexShader,
+          fragmentShader: galleryFragmentShader,
+          transparent: false
+        });
+
+        var mesh = new THREE.Mesh(galleryGeometry, material);
+        mesh.visible = false;
+
+        var plane = {
+          img: imgEl,
+          imgWrap: imgWrap,
+          mesh: mesh,
+          material: material,
+          targetHover: 0,
+          hoverEase: 0,
+          targetHoverPos: new THREE.Vector2(0.5, 0.5),
+          hoverPosEase: new THREE.Vector2(0.5, 0.5),
+          onMove: null,
+          onLeave: null
+        };
+
+        plane.onMove = function(e){
+          var r = imgWrap.getBoundingClientRect();
+          if (!r.width || !r.height) { return; }
+          plane.targetHover = 1;
+          plane.targetHoverPos.set(
+            (e.clientX - r.left) / r.width,
+            1 - (e.clientY - r.top) / r.height
+          );
+        };
+        plane.onLeave = function(){ plane.targetHover = 0; };
+
+        imgWrap.addEventListener('mousemove', plane.onMove);
+        imgWrap.addEventListener('mouseleave', plane.onLeave);
+
+        textureLoader.load(
+          url,
+          function onLoad(tex){
+            tex.colorSpace = THREE.SRGBColorSpace;
+            uniforms.uTexture.value = tex;
+
+            var wrapRect = imgWrap.getBoundingClientRect();
+            var texAspect = tex.image.width / tex.image.height;
+            var planeAspect = wrapRect.width / wrapRect.height;
+            var sx = 1, sy = 1;
+            if (texAspect > planeAspect) {
+              sx = planeAspect / texAspect;
+            } else {
+              sy = texAspect / planeAspect;
+            }
+            uniforms.uCoverScale.value.set(sx, sy);
+            uniforms.uCoverOffset.value.set((1 - sx) / 2, (1 - sy) / 2);
+
+            galleryScene.add(mesh);
+          },
+          undefined,
+          function onError(){
+            imgEl.classList.remove('th-gallery-hidden');
+          }
+        );
+
+        galleryPlanes.push(plane);
+      });
+
+      galleryActive = true;
+      setGalleryImgOpacity(0);
+
+      if ('IntersectionObserver' in window) {
+        galleryObserver = new IntersectionObserver(function(entries){
+          galleryIsVisible = entries[0].isIntersecting;
+          if (galleryIsVisible && galleryRafId === null) {
+            galleryRafId = requestAnimationFrame(galleryLoop);
+          }
+        }, { threshold: 0 });
+        galleryObserver.observe(document.querySelector('.projects'));
+      } else {
+        galleryRafId = requestAnimationFrame(galleryLoop);
+      }
+    }
+
+    if (gallerySkip()) {
+      setGalleryImgOpacity(1);
+    } else {
+      setupGallery();
+    }
+
+    window.addEventListener('resize', function(){
+      var shouldSkip = gallerySkip();
+      if (shouldSkip && galleryActive) {
+        teardownGallery();
+      } else if (!shouldSkip && !galleryActive) {
+        setupGallery();
+      } else if (!shouldSkip && galleryActive) {
+        galleryResizeCamera();
+      }
+    });
+  }
+
+} catch (galleryErr) {
+  console.error('TH gallery distortion failed to initialize; falling back to plain images:', galleryErr);
+  document.querySelectorAll('.project-card__img img').forEach(function(img){ img.classList.remove('th-gallery-hidden'); });
 }
 </script>
 
