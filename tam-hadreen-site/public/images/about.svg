@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" width="900" height="700">
+  <defs>
+    <linearGradient id="about-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#EDEAE4" />
+      <stop offset="100%" stop-color="#DCD5C8" />
+    </linearGradient>
+    <linearGradient id="about-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7A5F45" />
+      <stop offset="100%" stop-color="#5B4636" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="900" height="440" fill="url(#about-wall)" />
+  <rect x="0" y="440" width="900" height="260" fill="url(#about-floor)" />
+  
+  <rect x="552" y="52" width="276" height="276" rx="4" fill="#232E3B" />
+  <rect x="560" y="60" width="260" height="260" fill="#F4F6F7" />
+  <rect x="687" y="60" width="6" height="260" fill="#232E3B" />
+  <rect x="560" y="187" width="260" height="6" fill="#232E3B" />
+  
+  <rect x="100" y="420" width="340" height="20.8" fill="#5B4636" rx="4" />
+  <rect x="110" y="440.8" width="10" height="104" fill="#232E3B"  />
+  <rect x="420" y="440.8" width="10" height="104" fill="#232E3B"  />
+  <rect x="287" y="360" width="60" height="44" fill="#2b2725" rx="4" />
+  <rect x="140" y="500" width="60" height="90" fill="#3C4A5B" rx="10" />
+  
+  <path d="M 720 500 q -30 -70 -50 -110 q 40 20 55 70 q 10 -70 40 -100 q 5 55 -10 110 q 35 -50 70 -55 q -25 45 -70 65 z" fill="#5C7A52" />
+  <rect x="698" y="500" width="44" height="34" rx="6" fill="#232E3B" />
+</svg>

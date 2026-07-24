@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="wall-r1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F5EFE6" />
+      <stop offset="100%" stop-color="#E8DCC8" />
+    </linearGradient>
+    <linearGradient id="floor-r1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#544A3E" />
+      <stop offset="100%" stop-color="#3B342C" />
+    </linearGradient>
+    <radialGradient id="glow-r1" cx="50%" cy="0%" r="75%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="800" height="372" fill="url(#wall-r1)"  />
+  <rect x="0" y="372" width="800" height="228" fill="url(#floor-r1)"  />
+  <rect x="0" y="0" width="800" height="600" fill="url(#glow-r1)" />
+  
+  <rect x="52" y="42" width="696" height="246" rx="4" fill="#2B2725" />
+  <rect x="60" y="50" width="680" height="230" fill="#FBF6EC" />
+  <rect x="397" y="50" width="6" height="230" fill="#2B2725" />
+  <rect x="60" y="162" width="680" height="6" fill="#2B2725" /><rect x="60" y="340" width="300" height="150" fill="#2B2725" rx="8" /><rect x="64" y="348" width="67" height="134" fill="#E8DCC8" rx="4" /><rect x="139" y="348" width="67" height="134" fill="#2B2725" rx="4" /><rect x="214" y="348" width="67" height="134" fill="#E8DCC8" rx="4" /><rect x="289" y="348" width="67" height="134" fill="#2B2725" rx="4" /><rect x="440" y="340" width="300" height="150" fill="#2B2725" rx="8" /><rect x="444" y="348" width="67" height="134" fill="#E8DCC8" rx="4" /><rect x="519" y="348" width="67" height="134" fill="#2B2725" rx="4" /><rect x="594" y="348" width="67" height="134" fill="#E8DCC8" rx="4" /><rect x="669" y="348" width="67" height="134" fill="#2B2725" rx="4" />
+  <line x1="240" y1="280" x2="240" y2="340" stroke="#2B2725" stroke-width="3" />
+  <ellipse cx="240" cy="354" rx="34" ry="18" fill="#2B2725" />
+  <line x1="560" y1="280" x2="560" y2="340" stroke="#2B2725" stroke-width="3" />
+  <ellipse cx="560" cy="354" rx="34" ry="18" fill="#2B2725" />
+  <rect x="0" y="0" width="800" height="600" fill="#2B2725" opacity="0.04" />
+</svg>

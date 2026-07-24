@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <linearGradient id="hero-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F3EFE7" />
+      <stop offset="100%" stop-color="#E3D2C7" />
+    </linearGradient>
+    <linearGradient id="hero-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B08968" />
+      <stop offset="100%" stop-color="#8C6A4A" />
+    </linearGradient>
+    <radialGradient id="hero-glow" cx="30%" cy="10%" r="80%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1600" height="560" fill="url(#hero-wall)" />
+  <rect x="0" y="560" width="1600" height="340" fill="url(#hero-floor)" />
+  <rect x="0" y="0" width="1600" height="900" fill="url(#hero-glow)" />
+  
+  <rect x="1112" y="82" width="396" height="396" rx="4" fill="#7C4A2D" />
+  <rect x="1120" y="90" width="380" height="380" fill="#FBF3E8" />
+  <rect x="1307" y="90" width="6" height="380" fill="#7C4A2D" />
+  <rect x="1120" y="277" width="380" height="6" fill="#7C4A2D" />
+  <rect x="140" y="660" width="760" height="190" rx="10" fill="#E3D2C7" opacity="0.55" />
+  
+  <rect x="180" y="577" width="560" height="143" rx="18" fill="#7C8B6F" />
+  <rect x="180" y="500" width="560" height="121.00000000000001" rx="16" fill="#7C8B6F" />
+  <rect x="166" y="500" width="26" height="220" rx="12" fill="#4B5A40" />
+  <rect x="728" y="500" width="26" height="220" rx="12" fill="#4B5A40" />
+  <rect x="198" y="592.4" width="156.8" height="88" rx="10" fill="#4B5A40" opacity="0.5" />
+  <rect x="488" y="592.4" width="156.8" height="88" rx="10" fill="#4B5A40" opacity="0.5" />
+  
+  <rect x="500" y="720" width="260" height="10.799999999999999" rx="6" fill="#5B4636" />
+  <rect x="508" y="730.8" width="10" height="45" fill="#5B4636" opacity="0.85" />
+  <rect x="742" y="730.8" width="10" height="45" fill="#5B4636" opacity="0.85" />
+  
+  <path d="M 980 690 q -30 -70 -50 -110 q 40 20 55 70 q 10 -70 40 -100 q 5 55 -10 110 q 35 -50 70 -55 q -25 45 -70 65 z" fill="#5C7A52" />
+  <rect x="958" y="690" width="44" height="34" rx="6" fill="#4B5A40" />
+  
+  <line x1="300" y1="0" x2="300" y2="220" stroke="#7C4A2D" stroke-width="3" />
+  <ellipse cx="300" cy="234" rx="34" ry="18" fill="#7C4A2D" />
+  
+  <line x1="420" y1="0" x2="420" y2="260" stroke="#7C4A2D" stroke-width="3" />
+  <ellipse cx="420" cy="274" rx="34" ry="18" fill="#7C4A2D" />
+</svg>
