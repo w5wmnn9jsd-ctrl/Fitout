@@ -185,6 +185,17 @@ html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
   color: var(--bronze);
   margin-top: .9rem;
 }
+.intro-overlay__progress{
+  width: 130px; height: 1px;
+  background: var(--ink-line);
+  margin-top: 2.4rem;
+  overflow: hidden;
+}
+.intro-overlay__progress-fill{
+  height: 100%; width: 0%;
+  background: var(--bronze);
+  transition: width .3s ease-out;
+}
 
 /* ============================================================
    NAV
@@ -318,22 +329,31 @@ html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
   width: 100%; height: 100%; object-fit: cover;
   transform: scale(1.18);
 }
-.hero__canvas{
+.hero__gradient-fallback{
   position: absolute; inset: 0;
-  width: 100%; height: 100%;
   z-index: 1;
-  display: block;
   pointer-events: none;
   background: linear-gradient(135deg, var(--charcoal) 0%, var(--bronze) 55%, var(--cream) 100%);
   mix-blend-mode: overlay;
   opacity: .75;
+  transition: opacity .6s ease;
+}
+.hero__gradient-fallback.th-webgl-active{ opacity: 0; }
+
+/* single shared WebGL canvas for hero / materials / gallery layers */
+.th-scene-canvas{
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 5;
+  display: block;
+  pointer-events: none;
 }
 .hero__overlay{
   position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(19,19,17,.38) 0%, rgba(19,19,17,.42) 40%, rgba(19,19,17,.82) 100%);
 }
 .hero__content{
-  position: relative; z-index: 2;
+  position: relative; z-index: 6;
   width: 100%;
   padding: 0 var(--pad-inline) clamp(4.5rem, 9vw, 7rem);
 }
@@ -359,7 +379,7 @@ html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
 .hero__cta{ margin-top: 2.6rem; opacity: 0; transform: translateY(24px); }
 
 .hero__scroll{
-  position: absolute; left: var(--pad-inline); bottom: 2.4rem; z-index: 2;
+  position: absolute; left: var(--pad-inline); bottom: 2.4rem; z-index: 6;
   display: flex; align-items: center; gap: .8rem;
   color: var(--cream-soft);
   font-size: .68rem; letter-spacing: .28em; text-transform: uppercase;
@@ -611,7 +631,7 @@ html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
 .project-card:hover .project-card__img img{ transform: scale(1.06); }
 .project-card__img img.th-gallery-hidden{ opacity: 0 !important; }
 .project-card__view{
-  position: absolute; left: 1.4rem; bottom: 1.4rem; z-index: 2;
+  position: absolute; left: 1.4rem; bottom: 1.4rem; z-index: 6;
   font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
   color: var(--bronze-light);
   opacity: 0; transform: translateY(10px);
@@ -910,6 +930,7 @@ html.reduce-motion .testimonials__dots{ display: none; }
     Tam Hadreen
     <span class="intro-overlay__sub">Interiors</span>
   </div>
+  <div class="intro-overlay__progress"><div class="intro-overlay__progress-fill"></div></div>
 </div>
 
 <header class="nav">
@@ -931,7 +952,7 @@ html.reduce-motion .testimonials__dots{ display: none; }
       <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80" alt="A warm, minimal living interior with natural light">
     </div>
     <div class="hero__overlay"></div>
-    <canvas id="th-hero-canvas" class="hero__canvas" aria-hidden="true"></canvas>
+    <div class="hero__gradient-fallback" aria-hidden="true"></div>
     <div class="hero__content">
       <h1 class="hero__heading splitting" data-splitting>A Quieter Kind of Luxury</h1>
       <p class="hero__sub">Tam Hadreen Interiors designs and builds refined residential, hospitality, and commercial spaces across Dubai — shaped by material honesty and a decade of considered craft.</p>
@@ -1323,6 +1344,8 @@ html.reduce-motion .testimonials__dots{ display: none; }
   </div>
 </footer>
 
+<canvas id="th-scene-canvas" class="th-scene-canvas" aria-hidden="true"></canvas>
+
 <script defer>
 (function(){
   "use strict";
@@ -1412,7 +1435,7 @@ html.reduce-motion .testimonials__dots{ display: none; }
     initContact();
     initContactForm();
 
-    runIntro(lenis, splitHeroChars);
+    runPreloader(lenis, splitHeroChars);
 
     window.addEventListener('resize', debounce(function(){
       ScrollTrigger.refresh();
@@ -1441,7 +1464,59 @@ html.reduce-motion .testimonials__dots{ display: none; }
     });
   }
 
-  /* ---------- intro ---------- */
+  /* ---------- preloader (waits for real load state, not a timer) ---------- */
+  function waitForFonts(){
+    if (document.fonts && document.fonts.ready) {
+      return document.fonts.ready.catch(function(){});
+    }
+    return Promise.resolve();
+  }
+
+  function waitForImages(){
+    var imgs = document.querySelectorAll('.hero__img-wrap img, .project-card__img img');
+    return Promise.all(Array.prototype.map.call(imgs, function(img){
+      return new Promise(function(resolve){
+        if (img.complete && img.naturalWidth) { resolve(); return; }
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }));
+  }
+
+  function waitForHeroFrame(){
+    return new Promise(function(resolve){
+      (function poll(){
+        if (window.TH.heroFirstFrameRendered || window.TH.heroWebglFailed) { resolve(); return; }
+        requestAnimationFrame(poll);
+      })();
+    });
+  }
+
+  function runPreloader(lenis, splitHeroChars){
+    var fillEl = document.querySelector('.intro-overlay__progress-fill');
+    var weight = { fonts: 0.25, images: 0.4, frame: 0.35 };
+    var done = { fonts: 0, images: 0, frame: 0 };
+
+    function setProgress(){
+      var p = 0.06 + done.fonts * weight.fonts + done.images * weight.images + done.frame * weight.frame;
+      if (fillEl) { fillEl.style.width = (Math.min(1, p) * 100) + '%'; }
+    }
+    setProgress();
+
+    var fontsP = waitForFonts().then(function(){ done.fonts = 1; setProgress(); });
+    var imagesP = waitForImages().then(function(){ done.images = 1; setProgress(); });
+    var frameP = waitForHeroFrame().then(function(){ done.frame = 1; setProgress(); });
+
+    var allDone = Promise.all([fontsP, imagesP, frameP]);
+    var hardTimeout = new Promise(function(resolve){ setTimeout(resolve, 5000); });
+
+    Promise.race([allDone, hardTimeout]).then(function(){
+      if (fillEl) { fillEl.style.width = '100%'; }
+      runIntro(lenis, splitHeroChars);
+    });
+  }
+
+  /* ---------- intro (wipe overlay, then reveal hero headline) ---------- */
   function runIntro(lenis, splitHero){
     var tl = gsap.timeline({
       defaults: { ease: 'power4.inOut' },
@@ -1459,7 +1534,7 @@ html.reduce-motion .testimonials__dots{ display: none; }
     heroTl.to('.hero__sub', { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.55');
     heroTl.to('.hero__cta', { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.6');
 
-    tl.to({}, { duration: 0.55 })
+    tl.to({}, { duration: 0.2 })
       .to('.intro-overlay', {
         yPercent: -100, duration: 1.1,
         onStart: function(){ html.classList.remove('is-loading'); lenis.start(); }
@@ -1770,29 +1845,121 @@ html.reduce-motion .testimonials__dots{ display: none; }
 <script type="module">
 import * as THREE from "three";
 
+(function(){
+"use strict";
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var MOBILE_BREAKPOINT = 768;
+
+function isMobileViewport(){ return window.innerWidth < MOBILE_BREAKPOINT; }
+function pixelRatioCap(){ return isMobileViewport() ? 1.5 : 2; }
+
+function debounce(fn, wait){
+  var t;
+  return function(){
+    clearTimeout(t);
+    var args = arguments;
+    t = setTimeout(function(){ fn.apply(null, args); }, wait);
+  };
+}
+
+/* ============================================================
+   SHARED RENDERER
+   Exactly one WebGLRenderer / canvas for the whole page. Hero,
+   materials, and gallery each keep their own Scene and Camera
+   below, but all three render into this single canvas through
+   one master requestAnimationFrame loop below, so there is only
+   ever one WebGL context and one rAF running for all Three.js
+   work, regardless of how many layers are active.
+============================================================ */
+var sceneCanvas = document.getElementById('th-scene-canvas');
+var renderer = null;
+var rendererOk = false;
+
+try {
+  if (!sceneCanvas) { throw new Error('TH shared canvas element not found'); }
+  renderer = new THREE.WebGLRenderer({ canvas: sceneCanvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(pixelRatioCap());
+  renderer.autoClear = false;
+  window.TH.renderer = renderer;
+  rendererOk = true;
+} catch (rendererErr) {
+  console.error('TH shared WebGL renderer failed to initialize; all layers fall back to CSS/static states:', rendererErr);
+  window.TH.heroWebglFailed = true;
+}
+
+function resizeSharedRenderer(){
+  if (!rendererOk) return;
+  var w = window.innerWidth, h = window.innerHeight;
+  renderer.setPixelRatio(pixelRatioCap());
+  renderer.setSize(w, h, false);
+  sceneCanvas.style.width = w + 'px';
+  sceneCanvas.style.height = h + 'px';
+}
+resizeSharedRenderer();
+
+var layers = [];
+var masterRafId = null;
+var masterClock = new THREE.Clock();
+
+function anyLayerVisible(){
+  for (var i = 0; i < layers.length; i++){ if (layers[i].visible) return true; }
+  return false;
+}
+
+function kickMasterLoop(){
+  if (!rendererOk || masterRafId !== null) return;
+  if (!anyLayerVisible()) return;
+  masterRafId = requestAnimationFrame(masterTick);
+}
+
+function masterTick(){
+  if (!anyLayerVisible()) { masterRafId = null; return; }
+  var delta = masterClock.getDelta();
+  renderer.clear();
+  for (var i = 0; i < layers.length; i++){
+    var layer = layers[i];
+    if (!layer.visible) continue;
+    renderer.clearDepth();
+    layer.render(delta);
+  }
+  masterRafId = requestAnimationFrame(masterTick);
+}
+
+function registerLayer(layer){
+  layers.push(layer);
+  kickMasterLoop();
+}
+function unregisterLayer(layer){
+  var idx = layers.indexOf(layer);
+  if (idx !== -1) { layers.splice(idx, 1); }
+}
+
+var resizeCallbacks = [];
+function onSharedResize(fn){ resizeCallbacks.push(fn); }
+var debouncedResize = debounce(function(){
+  resizeSharedRenderer();
+  for (var i = 0; i < resizeCallbacks.length; i++){ resizeCallbacks[i](); }
+}, 150);
+window.addEventListener('resize', debouncedResize);
+
+/* ============================================================
+   HERO: gradient shader background + dust particle field
+   Document-position-tracked onto the shared canvas (matching the
+   gallery/materials pattern below) instead of owning a local
+   canvas confined to .hero, since the canvas is now shared.
+============================================================ */
 try {
 
   var heroSection = document.querySelector('.hero');
-  var canvas = document.getElementById('th-hero-canvas');
+  var heroFallback = document.querySelector('.hero__gradient-fallback');
 
-  if (!heroSection || !canvas) {
-    throw new Error('TH hero canvas: required elements not found');
-  }
+  if (!rendererOk) { throw new Error('shared renderer unavailable'); }
+  if (!heroSection) { throw new Error('TH hero: .hero section not found'); }
 
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  var renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true,
-    alpha: true
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-  window.TH.renderer = renderer;
-
-  var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 5);
+  var heroScene = new THREE.Scene();
+  var heroCamera = new THREE.OrthographicCamera(0, window.innerWidth, window.innerHeight, 0, 0.1, 1000);
+  heroCamera.position.z = 10;
 
   var uniforms = {
     uTime: { value: 0 },
@@ -1804,6 +1971,7 @@ try {
 
   var material = new THREE.ShaderMaterial({
     uniforms: uniforms,
+    transparent: true,
     vertexShader: [
       'varying vec2 vUv;',
       'void main(){',
@@ -1878,23 +2046,20 @@ try {
       '  float mixA = smoothstep(-0.4, 0.6, n1);',
       '  vec3 col = mix(uColorA, uColorB, mixA);',
       '  float mixB = smoothstep(0.0, 0.75, n2);',
-      '  col = mix(col, uColorC, mixB * 0.55);',
-      '  gl_FragColor = vec4(col, 1.0);',
+      '  col = mix(col, uColorC, mixB * 0.4);',
+      '  gl_FragColor = vec4(col, 0.4);',
       '}'
     ].join('\n')
   });
 
-  var plane = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 1, 1), material);
-  scene.add(plane);
+  var plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
+  heroScene.add(plane);
 
   var PARTICLE_COUNT_DESKTOP = 800;
   var PARTICLE_COUNT_MOBILE = 300;
-  var PARTICLE_MOBILE_BREAKPOINT = 768;
-  var PARTICLE_SPREAD_X = 22;
-  var PARTICLE_SPREAD_Y = 14;
 
   function getParticleCount(){
-    return window.innerWidth < PARTICLE_MOBILE_BREAKPOINT ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
+    return isMobileViewport() ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP;
   }
 
   var particleGeometry = null;
@@ -1933,9 +2098,11 @@ try {
     '}'
   ].join('\n');
 
+  var particleSpreadX = 600, particleSpreadY = 400;
+
   function buildParticles(count){
     if (particlePoints) {
-      scene.remove(particlePoints);
+      heroScene.remove(particlePoints);
       particleGeometry.dispose();
       particleMaterial.dispose();
       particlePoints = null;
@@ -1953,8 +2120,8 @@ try {
 
     for (var i = 0; i < count; i++) {
       var ix = i * 3;
-      var bx = (Math.random() - 0.5) * PARTICLE_SPREAD_X;
-      var by = (Math.random() - 0.5) * PARTICLE_SPREAD_Y;
+      var bx = (Math.random() - 0.5) * particleSpreadX;
+      var by = (Math.random() - 0.5) * particleSpreadY;
       var bz = 0.3 + Math.random() * 2.4;
 
       positions[ix] = bx;
@@ -1965,10 +2132,10 @@ try {
       opacities[i] = 0.12 + Math.random() * 0.43;
 
       particleBaseX[i] = bx;
-      particleWanderAmp[i] = 0.15 + Math.random() * 0.5;
+      particleWanderAmp[i] = (0.15 + Math.random() * 0.5) * 14;
       particleWanderFreq[i] = 0.08 + Math.random() * 0.12;
       particlePhase[i] = Math.random() * Math.PI * 2;
-      particleSpeed[i] = 0.15 + Math.random() * 0.35;
+      particleSpeed[i] = (0.15 + Math.random() * 0.35) * 14;
     }
 
     particleGeometry = new THREE.BufferGeometry();
@@ -1989,7 +2156,7 @@ try {
     });
 
     particlePoints = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particlePoints);
+    heroScene.add(particlePoints);
 
     currentParticleCount = count;
   }
@@ -1997,13 +2164,13 @@ try {
   function updateParticles(delta){
     var pos = particleGeometry.attributes.position.array;
     var t = uniforms.uTime.value;
-    var bound = PARTICLE_SPREAD_Y / 2;
+    var bound = particleSpreadY / 2;
 
     for (var i = 0; i < currentParticleCount; i++) {
       var ix = i * 3;
       pos[ix + 1] += particleSpeed[i] * delta;
       if (pos[ix + 1] > bound) {
-        pos[ix + 1] -= PARTICLE_SPREAD_Y;
+        pos[ix + 1] -= particleSpreadY;
       }
       pos[ix] = particleBaseX[i] + Math.sin(t * particleWanderFreq[i] * 10.0 + particlePhase[i]) * particleWanderAmp[i];
     }
@@ -2011,76 +2178,90 @@ try {
     particleGeometry.attributes.position.needsUpdate = true;
   }
 
-  function resize(){
-    var w = heroSection.clientWidth;
-    var h = heroSection.clientHeight;
-    if (!w || !h) return;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    uniforms.uResolution.value.set(w, h);
+  function heroResize(){
+    heroCamera.left = 0;
+    heroCamera.right = window.innerWidth;
+    heroCamera.top = window.innerHeight;
+    heroCamera.bottom = 0;
+    heroCamera.updateProjectionMatrix();
+
+    var rect = heroSection.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      uniforms.uResolution.value.set(rect.width, rect.height);
+      particleSpreadX = rect.width;
+      particleSpreadY = rect.height;
+    }
 
     var targetCount = getParticleCount();
     if (targetCount !== currentParticleCount) {
       buildParticles(targetCount);
     }
   }
-  resize();
-  window.addEventListener('resize', resize);
+  heroResize();
+  onSharedResize(heroResize);
 
-  var clock = new THREE.Clock();
-  var camX = 0, camY = 0;
-  var isVisible = true;
-  var rafId = null;
+  var heroCamX = 0, heroCamY = 0;
 
-  function renderFrame(){
-    var delta = clock.getDelta();
-    uniforms.uTime.value += delta;
+  function heroRenderFrame(delta){
+    var rect = heroSection.getBoundingClientRect();
+    if (!rect.width || !rect.height) { return; }
 
-    var targetX = window.TH.mouseX || 0;
-    var targetY = window.TH.mouseY || 0;
+    var centerX = rect.left + rect.width / 2;
+    var centerY = window.innerHeight - (rect.top + rect.height / 2);
 
-    camX += (targetX * 0.6 - camX) * 0.04;
-    camY += (targetY * 0.4 - camY) * 0.04;
+    plane.position.set(centerX, centerY, 0);
+    plane.scale.set(rect.width, rect.height, 1);
 
-    camera.position.x = camX;
-    camera.position.y = camY;
-    camera.lookAt(0, 0, 0);
+    if (!reduceMotion) {
+      uniforms.uTime.value += delta;
+
+      var targetX = window.TH.mouseX || 0;
+      var targetY = window.TH.mouseY || 0;
+      heroCamX += (targetX * 48 - heroCamX) * 0.04;
+      heroCamY += (targetY * 32 - heroCamY) * 0.04;
+    }
+
+    heroCamera.position.x = heroCamX;
+    heroCamera.position.y = heroCamY;
 
     if (particlePoints) {
-      particlePoints.position.x = camX * 0.85;
-      particlePoints.position.y = camY * 0.85;
+      particlePoints.position.x = centerX + heroCamX * 0.85;
+      particlePoints.position.y = centerY + heroCamY * 0.85;
 
       if (!reduceMotion) {
         updateParticles(delta);
       }
     }
 
-    renderer.render(scene, camera);
+    renderer.render(heroScene, heroCamera);
+
+    if (!window.TH.heroFirstFrameRendered) {
+      window.TH.heroFirstFrameRendered = true;
+      if (heroFallback) { heroFallback.classList.add('th-webgl-active'); }
+    }
   }
 
-  function loop(){
-    if (!isVisible) { rafId = null; return; }
-    renderFrame();
-    rafId = requestAnimationFrame(loop);
-  }
+  var heroLayer = { visible: true, render: heroRenderFrame };
 
-  if (reduceMotion) {
-    renderFrame();
-  } else if ('IntersectionObserver' in window) {
-    var observer = new IntersectionObserver(function(entries){
-      isVisible = entries[0].isIntersecting;
-      if (isVisible && rafId === null) {
-        rafId = requestAnimationFrame(loop);
-      }
+  // Render one frame immediately so the preloader's "first WebGL frame"
+  // wait resolves as soon as possible, without waiting a tick for the
+  // IntersectionObserver's first callback.
+  heroRenderFrame(0);
+
+  if ('IntersectionObserver' in window) {
+    var heroObserver = new IntersectionObserver(function(entries){
+      heroLayer.visible = entries[0].isIntersecting;
+      if (heroLayer.visible) { kickMasterLoop(); }
     }, { threshold: 0 });
-    observer.observe(heroSection);
-  } else {
-    rafId = requestAnimationFrame(loop);
+    heroObserver.observe(heroSection);
   }
+  registerLayer(heroLayer);
 
-} catch (err) {
-  console.error('TH hero shader failed to initialize; CSS gradient fallback remains visible:', err);
+} catch (heroErr) {
+  console.error('TH hero shader failed to initialize; CSS gradient fallback remains visible:', heroErr);
+  window.TH.heroWebglFailed = true;
+  var heroFallbackOnErr = document.querySelector('.hero__gradient-fallback');
+  if (heroFallbackOnErr) { heroFallbackOnErr.classList.remove('th-webgl-active'); }
 }
 
 /* ============================================================
@@ -2097,9 +2278,11 @@ try {
     document.querySelectorAll('.materials__slot')
   );
 
+  if (!rendererOk) { throw new Error('shared renderer unavailable'); }
+
   if (materialsSection && materialsSlotEls.length) {
 
-    var materialsReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var materialsReduceMotion = reduceMotion;
     var MATERIALS_REVEAL_DISTANCE = 260;
 
     function revealMaterialsHeading(){
@@ -2125,7 +2308,7 @@ try {
     revealMaterialsHeading();
 
     function materialsShouldSkip(){
-      return window.innerWidth < 768;
+      return isMobileViewport();
     }
 
     function materialsScrollValue(){
@@ -2138,17 +2321,13 @@ try {
       return window.TH.lenisScroll || 0;
     }
 
-    var materialsCanvas = null;
-    var materialsRenderer = null;
     var materialsScene = null;
     var materialsCamera = null;
-    var materialsClock = null;
     var materialsObjs = [];
     var materialsActive = false;
-    var materialsIsVisible = true;
-    var materialsRafId = null;
     var materialsObserver = null;
     var materialsRevealTriggerScroll = 0;
+    var materialsLayer = { visible: false, render: materialsRenderFrame };
 
     function makeMarbleTexture(){
       var size = 512;
@@ -2261,9 +2440,6 @@ try {
 
     function materialsResizeCamera(){
       var w = window.innerWidth, h = window.innerHeight;
-      materialsRenderer.setSize(w, h, false);
-      materialsCanvas.style.width = w + 'px';
-      materialsCanvas.style.height = h + 'px';
 
       var dist = materialsCamera.position.z;
       materialsCamera.fov = 2 * Math.atan((h / 2) / dist) * (180 / Math.PI);
@@ -2274,8 +2450,7 @@ try {
       computeMaterialsRevealTrigger();
     }
 
-    function materialsRenderFrame(){
-      var delta = materialsClock.getDelta();
+    function materialsRenderFrame(delta){
       var scrollNow = materialsScrollValue();
 
       materialsObjs.forEach(function(m, i){
@@ -2303,18 +2478,13 @@ try {
         m.mesh.scale.setScalar(scaleMult);
       });
 
-      materialsRenderer.render(materialsScene, materialsCamera);
-    }
-
-    function materialsLoop(){
-      if (!materialsIsVisible) { materialsRafId = null; return; }
-      materialsRenderFrame();
-      materialsRafId = requestAnimationFrame(materialsLoop);
+      renderer.render(materialsScene, materialsCamera);
     }
 
     function teardownMaterials(){
-      if (materialsRafId !== null) { cancelAnimationFrame(materialsRafId); materialsRafId = null; }
       if (materialsObserver) { materialsObserver.disconnect(); materialsObserver = null; }
+      materialsLayer.visible = false;
+      unregisterLayer(materialsLayer);
 
       materialsObjs.forEach(function(m){
         m.el.removeEventListener('mouseenter', m.onEnter);
@@ -2331,11 +2501,6 @@ try {
       });
       materialsObjs = [];
 
-      if (materialsRenderer) { materialsRenderer.dispose(); materialsRenderer = null; }
-      if (materialsCanvas && materialsCanvas.parentNode) {
-        materialsCanvas.parentNode.removeChild(materialsCanvas);
-      }
-      materialsCanvas = null;
       materialsScene = null;
       materialsCamera = null;
       materialsActive = false;
@@ -2343,18 +2508,6 @@ try {
 
     function setupMaterials(){
       if (materialsActive || materialsShouldSkip()) { return; }
-
-      materialsCanvas = document.createElement('canvas');
-      materialsCanvas.setAttribute('aria-hidden', 'true');
-      materialsCanvas.style.position = 'fixed';
-      materialsCanvas.style.top = '0';
-      materialsCanvas.style.left = '0';
-      materialsCanvas.style.pointerEvents = 'none';
-      materialsCanvas.style.zIndex = '5';
-      document.body.appendChild(materialsCanvas);
-
-      materialsRenderer = new THREE.WebGLRenderer({ canvas: materialsCanvas, antialias: true, alpha: true });
-      materialsRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
       materialsScene = new THREE.Scene();
       materialsCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 5000);
@@ -2366,8 +2519,6 @@ try {
       var fillLight = new THREE.DirectionalLight(0xffe3c4, 0.85);
       fillLight.position.set(-420, -120, 220);
       materialsScene.add(hemiLight, keyLight, fillLight);
-
-      materialsClock = new THREE.Clock();
 
       materialsObjs = materialsSlotEls.map(function(slotEl, i){
         var type = slotEl.getAttribute('data-material');
@@ -2408,25 +2559,24 @@ try {
 
       materialsResizeCamera();
       materialsActive = true;
+      materialsLayer.visible = true;
 
-      if ('IntersectionObserver' in window) {
+      if (!materialsObserver && 'IntersectionObserver' in window) {
         materialsObserver = new IntersectionObserver(function(entries){
-          materialsIsVisible = entries[0].isIntersecting;
-          if (materialsIsVisible && materialsRafId === null) {
-            materialsRafId = requestAnimationFrame(materialsLoop);
-          }
+          materialsLayer.visible = entries[0].isIntersecting;
+          if (materialsLayer.visible) { kickMasterLoop(); }
         }, { threshold: 0 });
         materialsObserver.observe(materialsSection);
-      } else {
-        materialsRafId = requestAnimationFrame(materialsLoop);
       }
+
+      registerLayer(materialsLayer);
     }
 
     if (!materialsShouldSkip()) {
       setupMaterials();
     }
 
-    window.addEventListener('resize', function(){
+    onSharedResize(function(){
       var shouldSkip = materialsShouldSkip();
       if (shouldSkip && materialsActive) {
         teardownMaterials();
@@ -2457,12 +2607,14 @@ try {
     document.querySelectorAll('.project-card__img img')
   );
 
+  if (!rendererOk) { throw new Error('shared renderer unavailable'); }
+
   if (galleryImgs.length) {
 
-    var galleryReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var galleryReduceMotion = reduceMotion;
 
     function gallerySkip(){
-      return galleryReduceMotion || window.innerWidth < 768;
+      return galleryReduceMotion || isMobileViewport();
     }
 
     function setGalleryImgOpacity(val){
@@ -2472,19 +2624,15 @@ try {
       });
     }
 
-    var galleryCanvas = null;
-    var galleryRenderer = null;
     var galleryScene = null;
     var galleryCamera = null;
     var galleryPlanes = [];
     var galleryGeometry = null;
     var galleryActive = false;
-    var galleryIsVisible = true;
-    var galleryRafId = null;
-    var galleryClock = null;
     var galleryTime = 0;
     var gallerySmoothVelocity = 0;
     var galleryObserver = null;
+    var galleryLayer = { visible: false, render: galleryRenderFrame };
 
     var galleryVertexShader = [
       'varying vec2 vUv;',
@@ -2524,8 +2672,9 @@ try {
     ].join('\n');
 
     function teardownGallery(){
-      if (galleryRafId !== null) { cancelAnimationFrame(galleryRafId); galleryRafId = null; }
       if (galleryObserver) { galleryObserver.disconnect(); galleryObserver = null; }
+      galleryLayer.visible = false;
+      unregisterLayer(galleryLayer);
 
       galleryPlanes.forEach(function(p){
         p.imgWrap.removeEventListener('mousemove', p.onMove);
@@ -2538,9 +2687,6 @@ try {
       galleryPlanes = [];
 
       if (galleryGeometry) { galleryGeometry.dispose(); galleryGeometry = null; }
-      if (galleryRenderer) { galleryRenderer.dispose(); galleryRenderer = null; }
-      if (galleryCanvas && galleryCanvas.parentNode) { galleryCanvas.parentNode.removeChild(galleryCanvas); }
-      galleryCanvas = null;
       galleryScene = null;
       galleryCamera = null;
       galleryActive = false;
@@ -2549,6 +2695,7 @@ try {
     }
 
     function galleryResizeCamera(){
+      if (!galleryCamera) return;
       var w = window.innerWidth;
       var h = window.innerHeight;
       galleryCamera.left = 0;
@@ -2556,13 +2703,9 @@ try {
       galleryCamera.top = h;
       galleryCamera.bottom = 0;
       galleryCamera.updateProjectionMatrix();
-      galleryRenderer.setSize(w, h, false);
-      galleryCanvas.style.width = w + 'px';
-      galleryCanvas.style.height = h + 'px';
     }
 
-    function galleryRenderFrame(){
-      var delta = galleryClock.getDelta();
+    function galleryRenderFrame(delta){
       galleryTime += delta;
 
       var velocity = window.TH.scrollVelocity || 0;
@@ -2590,29 +2733,11 @@ try {
         p.material.uniforms.uScrollVelocity.value = gallerySmoothVelocity;
       });
 
-      galleryRenderer.render(galleryScene, galleryCamera);
-    }
-
-    function galleryLoop(){
-      if (!galleryIsVisible) { galleryRafId = null; return; }
-      galleryRenderFrame();
-      galleryRafId = requestAnimationFrame(galleryLoop);
+      renderer.render(galleryScene, galleryCamera);
     }
 
     function setupGallery(){
       if (galleryActive || gallerySkip()) { return; }
-
-      galleryCanvas = document.createElement('canvas');
-      galleryCanvas.setAttribute('aria-hidden', 'true');
-      galleryCanvas.style.position = 'fixed';
-      galleryCanvas.style.top = '0';
-      galleryCanvas.style.left = '0';
-      galleryCanvas.style.pointerEvents = 'none';
-      galleryCanvas.style.zIndex = '5';
-      document.body.appendChild(galleryCanvas);
-
-      galleryRenderer = new THREE.WebGLRenderer({ canvas: galleryCanvas, antialias: true, alpha: true });
-      galleryRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
       galleryScene = new THREE.Scene();
       galleryCamera = new THREE.OrthographicCamera(0, window.innerWidth, window.innerHeight, 0, 0.1, 1000);
@@ -2620,7 +2745,6 @@ try {
       galleryResizeCamera();
 
       galleryGeometry = new THREE.PlaneGeometry(1, 1);
-      galleryClock = new THREE.Clock();
 
       var textureLoader = new THREE.TextureLoader();
       textureLoader.crossOrigin = 'anonymous';
@@ -2706,19 +2830,18 @@ try {
       });
 
       galleryActive = true;
+      galleryLayer.visible = true;
       setGalleryImgOpacity(0);
 
-      if ('IntersectionObserver' in window) {
+      if (!galleryObserver && 'IntersectionObserver' in window) {
         galleryObserver = new IntersectionObserver(function(entries){
-          galleryIsVisible = entries[0].isIntersecting;
-          if (galleryIsVisible && galleryRafId === null) {
-            galleryRafId = requestAnimationFrame(galleryLoop);
-          }
+          galleryLayer.visible = entries[0].isIntersecting;
+          if (galleryLayer.visible) { kickMasterLoop(); }
         }, { threshold: 0 });
         galleryObserver.observe(document.querySelector('.projects'));
-      } else {
-        galleryRafId = requestAnimationFrame(galleryLoop);
       }
+
+      registerLayer(galleryLayer);
     }
 
     if (gallerySkip()) {
@@ -2727,7 +2850,7 @@ try {
       setupGallery();
     }
 
-    window.addEventListener('resize', function(){
+    onSharedResize(function(){
       var shouldSkip = gallerySkip();
       if (shouldSkip && galleryActive) {
         teardownGallery();
@@ -2743,6 +2866,8 @@ try {
   console.error('TH gallery distortion failed to initialize; falling back to plain images:', galleryErr);
   document.querySelectorAll('.project-card__img img').forEach(function(img){ img.classList.remove('th-gallery-hidden'); });
 }
+
+})();
 </script>
 
 </body>
