@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tam Hadreen Interiors | Interior Design &amp; Fitout, Dubai</title>
+<meta name="description" content="Tam Hadreen Interiors designs and builds refined residential, hospitality, and commercial interiors across Dubai — design and fitout under one roof.">
+<meta name="theme-color" content="#1C1C1C">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='4' fill='%231C1C1C'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' fill='%23A67C52' text-anchor='middle'%3ETH%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&amp;family=Inter:wght@300;400;500&amp;display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/splitting/dist/splitting.css">
+
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script defer src="https://unpkg.com/splitting/dist/splitting.min.js"></script>
+
+<style>
+/* ============================================================
+   RESET & TOKENS
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; background: none; border: none; }
+ul { list-style: none; margin: 0; padding: 0; }
+h1, h2, h3, p, blockquote, figure { margin: 0; }
+
+:root{
+  --charcoal: #1C1C1C;
+  --charcoal-2: #131311;
+  --charcoal-soft: #272623;
+  --bronze: #A67C52;
+  --bronze-light: #C9AB84;
+  --bronze-dim: rgba(166,124,82,0.32);
+  --cream: #F5F0E8;
+  --cream-dim: #E8E0D0;
+  --cream-line: rgba(245,240,232,0.14);
+  --ink-line: rgba(28,28,28,0.12);
+  --ink-soft: rgba(28,28,28,0.62);
+  --cream-soft: rgba(245,240,232,0.66);
+
+  --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+
+  --ease: cubic-bezier(.22,1,.36,1);
+  --ease-soft: cubic-bezier(.16,1,.3,1);
+
+  --pad-inline: clamp(1.5rem, 5vw, 4.5rem);
+  --pad-section: clamp(5rem, 11vw, 9rem);
+
+  --reveal-y: 60px;
+}
+
+@media (max-width: 767px){
+  :root{ --reveal-y: 26px; --pad-section: clamp(3.5rem, 14vw, 6rem); }
+}
+
+html { scroll-behavior: auto; }
+html.is-loading, html.is-loading body { overflow: hidden; height: 100%; }
+
+body{
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.visually-hidden{
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.skip-link{
+  position: fixed; top: -60px; left: 1rem; z-index: 10000;
+  background: var(--charcoal); color: var(--cream); padding: .8rem 1.4rem;
+  font-family: var(--font-body); font-size: .85rem; letter-spacing: .04em;
+  transition: top .3s var(--ease);
+}
+.skip-link:focus{ top: 1rem; }
+
+:focus-visible{ outline: 2px solid var(--bronze); outline-offset: 4px; }
+
+/* container */
+.wrap{ max-width: 1440px; margin: 0 auto; padding-inline: var(--pad-inline); }
+
+/* eyebrow label used across sections */
+.eyebrow{
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 1.1rem;
+}
+
+/* ============================================================
+   MASK REVEAL SYSTEM (consistent treatment site-wide)
+============================================================ */
+.word{ display: inline-block; overflow: hidden; }
+.char{ display: inline-block; }
+.whitespace{ white-space: pre; }
+
+.mask-inner{ display: inline-block; will-change: transform, opacity; }
+
+.reveal-line{ overflow: hidden; }
+.reveal-line .mask-inner{ display: block; }
+
+/* ============================================================
+   GRAIN OVERLAY
+============================================================ */
+.grain{
+  position: fixed; inset: 0; z-index: 9990; pointer-events: none;
+  opacity: .045; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* ============================================================
+   CUSTOM CURSOR
+============================================================ */
+.cursor{
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--bronze);
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+  transition: width .35s var(--ease), height .35s var(--ease), background-color .35s var(--ease), border-color .35s var(--ease);
+  mix-blend-mode: normal;
+}
+.cursor.cursor--hover{
+  width: 42px; height: 42px;
+  background: transparent;
+  border: 1px solid var(--bronze);
+}
+html.no-cursor .cursor{ display: none; }
+html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
+@media (max-width: 767px), (hover: none){
+  .cursor{ display: none !important; }
+}
+
+/* ============================================================
+   INTRO OVERLAY
+============================================================ */
+.intro-overlay{
+  position: fixed; inset: 0; z-index: 9998;
+  background: var(--cream);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.intro-overlay__name{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  letter-spacing: .03em;
+  color: var(--charcoal);
+  text-align: center;
+}
+.intro-overlay__sub{
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: .78rem;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-top: .9rem;
+}
+
+/* ============================================================
+   NAV
+============================================================ */
+.nav{
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  padding: 1.6rem var(--pad-inline);
+  display: flex; align-items: center; justify-content: space-between;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background-color .5s var(--ease), border-color .5s var(--ease), padding .4s var(--ease);
+}
+.nav.nav--solid{
+  background: rgba(245,240,232,.92);
+  backdrop-filter: blur(10px);
+  border-bottom-color: var(--ink-line);
+  padding-block: 1.1rem;
+}
+.nav__logo{
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.1;
+  transition: color .5s var(--ease);
+}
+.nav.nav--solid .nav__logo{ color: var(--charcoal); }
+.nav__logo small{
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: .58rem;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-top: .25rem;
+}
+.nav__links{
+  display: flex; align-items: center; gap: clamp(1.4rem, 3vw, 2.6rem);
+}
+.nav__link{
+  position: relative;
+  font-family: var(--font-body);
+  font-size: .82rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--cream);
+  padding-bottom: .3rem;
+  transition: color .5s var(--ease);
+}
+.nav.nav--solid .nav__link{ color: var(--charcoal); }
+.nav__link::after{
+  content: ''; position: absolute; left: 0; bottom: 0;
+  width: 100%; height: 1px; background: var(--bronze);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .45s var(--ease);
+}
+.nav__link:hover::after{ transform: scaleX(1); }
+.nav__toggle{ display: none; }
+
+@media (max-width: 767px){
+  .nav__links{ display: none; }
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn{
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 1rem 2.2rem;
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn--outline{
+  border: 1px solid var(--bronze);
+  color: var(--cream);
+  overflow: hidden;
+  z-index: 1;
+}
+.btn--outline::before{
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--bronze);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .5s var(--ease);
+  z-index: -1;
+}
+.btn--outline:hover::before{ transform: scaleX(1); }
+.btn--outline span{ position: relative; }
+
+.btn--fill{
+  position: relative;
+  border: 1px solid var(--charcoal);
+  color: var(--charcoal);
+  overflow: hidden;
+  z-index: 1;
+  width: 100%;
+}
+.btn--fill::before{
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--bronze);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .55s var(--ease);
+  z-index: -1;
+}
+.btn--fill:hover::before{ transform: scaleX(1); }
+.btn--fill:hover{ color: var(--cream); border-color: var(--bronze); }
+.btn--fill span{ position: relative; transition: color .3s var(--ease); }
+
+/* ============================================================
+   HERO
+============================================================ */
+.hero{
+  position: relative;
+  height: 100vh; min-height: 620px;
+  display: flex; align-items: flex-end;
+  overflow: hidden;
+  background: var(--charcoal);
+}
+.hero__img-wrap{
+  position: absolute; inset: 0; overflow: hidden;
+}
+.hero__img-wrap img{
+  width: 100%; height: 100%; object-fit: cover;
+  transform: scale(1.18);
+}
+.hero__overlay{
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(19,19,17,.38) 0%, rgba(19,19,17,.42) 40%, rgba(19,19,17,.82) 100%);
+}
+.hero__content{
+  position: relative; z-index: 2;
+  width: 100%;
+  padding: 0 var(--pad-inline) clamp(4.5rem, 9vw, 7rem);
+}
+.hero__heading{
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.6rem, 7.4vw, 6.4rem);
+  line-height: 1.04;
+  color: var(--cream);
+  max-width: 20ch;
+  letter-spacing: -.01em;
+}
+.hero__sub{
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.7;
+  color: var(--cream-soft);
+  max-width: 42ch;
+  margin-top: 1.8rem;
+  opacity: 0; transform: translateY(24px);
+}
+.hero__cta{ margin-top: 2.6rem; opacity: 0; transform: translateY(24px); }
+
+.hero__scroll{
+  position: absolute; left: var(--pad-inline); bottom: 2.4rem; z-index: 2;
+  display: flex; align-items: center; gap: .8rem;
+  color: var(--cream-soft);
+  font-size: .68rem; letter-spacing: .28em; text-transform: uppercase;
+  transition: opacity .5s var(--ease);
+}
+.hero__scroll-line{
+  width: 1px; height: 34px; background: var(--cream-soft);
+  position: relative; overflow: hidden;
+}
+.hero__scroll-line::after{
+  content: ''; position: absolute; left: 0; top: -100%; width: 100%; height: 100%;
+  background: var(--bronze);
+  animation: scrollPulse 2.2s ease-in-out infinite;
+}
+@keyframes scrollPulse{
+  0%{ top: -100%; } 50%{ top: 0; } 100%{ top: 100%; }
+}
+
+/* ============================================================
+   ABOUT
+============================================================ */
+.about{ padding: var(--pad-section) 0; background: var(--cream); }
+.about .wrap{
+  display: grid; grid-template-columns: .85fr 1.15fr; gap: clamp(2rem, 6vw, 6rem);
+}
+.about__heading{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.1rem, 4vw, 3.4rem);
+  line-height: 1.16;
+  color: var(--charcoal);
+}
+.about__body p{
+  font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+  line-height: 1.75;
+  font-weight: 300;
+  color: var(--ink-soft);
+  margin-bottom: 1.3rem;
+  max-width: 46ch;
+}
+.about__rule{
+  height: 1px; background: var(--bronze);
+  transform: scaleX(0); transform-origin: left;
+  grid-column: 1 / -1;
+  margin-top: clamp(3rem, 6vw, 5rem);
+}
+
+@media (max-width: 900px){
+  .about .wrap{ grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   STATS STRIP
+============================================================ */
+.stats{
+  background: var(--charcoal); color: var(--cream);
+  padding: clamp(3.5rem, 7vw, 6rem) 0;
+}
+.stats .wrap{
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+.stat{
+  padding: 0 clamp(1rem, 2vw, 2rem);
+  border-left: 1px solid var(--cream-line);
+  text-align: left;
+}
+.stat:first-child{ border-left: none; padding-left: 0; }
+.stat__number{
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.4rem, 5.6vw, 4.4rem);
+  color: var(--cream);
+  line-height: 1;
+}
+.stat__label{
+  display: block;
+  margin-top: .9rem;
+  font-size: .74rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--bronze-light);
+}
+
+@media (max-width: 767px){
+  .stats .wrap{ grid-template-columns: 1fr 1fr; row-gap: 2.6rem; }
+  .stat:nth-child(3){ border-left: none; padding-left: 0; }
+}
+
+/* ============================================================
+   SERVICES
+============================================================ */
+.services{ background: var(--cream); padding: var(--pad-section) 0; }
+.services__inner{
+  display: grid; grid-template-columns: .8fr 1.4fr; gap: clamp(2rem, 6vw, 5rem);
+}
+.services__sticky{
+  align-self: start;
+  position: sticky; top: 32vh;
+}
+.services__heading-stack{
+  position: relative;
+  height: clamp(3rem, 6vw, 4.6rem);
+  margin-top: .4rem;
+}
+.services__heading{
+  position: absolute; inset: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.2rem, 4.6vw, 3.6rem);
+  color: var(--charcoal);
+  opacity: 0;
+  transition: opacity .7s var(--ease-soft);
+}
+.services__heading.active{ opacity: 1; }
+
+.service-block{
+  padding-block: clamp(2.6rem, 5vw, 4rem);
+  border-top: 1px solid var(--ink-line);
+}
+.service-block:last-child{ border-bottom: 1px solid var(--ink-line); }
+.service-block__num{
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.6rem, 5vw, 3.6rem);
+  color: var(--bronze-dim);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+.service-block__title{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  color: var(--charcoal);
+  margin-bottom: 1rem;
+}
+.service-block__text{
+  font-size: 1rem; line-height: 1.75; color: var(--ink-soft);
+  max-width: 52ch; font-weight: 300;
+}
+.service-block__rule{
+  width: 100%; height: 1px; background: var(--bronze);
+  transform: scaleX(0); transform-origin: left;
+  margin-top: 1.8rem;
+}
+
+@media (max-width: 900px){
+  .services__inner{ grid-template-columns: 1fr; }
+  .services__sticky{ position: static; margin-bottom: 1rem; }
+}
+
+/* ============================================================
+   PROJECTS
+============================================================ */
+.projects{ background: var(--charcoal); color: var(--cream); position: relative; }
+.projects__header{
+  padding: var(--pad-section) var(--pad-inline) clamp(2.5rem, 5vw, 4rem);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; flex-wrap: wrap;
+}
+.projects__heading{
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(2.2rem, 4.6vw, 3.6rem); color: var(--cream);
+}
+.projects__note{
+  font-size: .85rem; color: var(--cream-soft); max-width: 32ch; line-height: 1.6;
+}
+.projects__track-wrap{ overflow: hidden; }
+.projects__track{
+  display: flex; gap: clamp(1.2rem, 2.5vw, 2rem);
+  padding: 0 var(--pad-inline) clamp(3rem, 6vw, 5rem);
+  width: max-content;
+}
+.project-card{
+  position: relative;
+  width: min(78vw, 560px);
+  flex-shrink: 0;
+}
+.project-card__img{
+  position: relative;
+  width: 100%; aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--charcoal-soft);
+}
+.project-card__img img{
+  position: absolute; top: -8%; left: 0;
+  width: 100%; height: 116%;
+  object-fit: cover;
+  transition: transform .8s var(--ease-soft);
+}
+.project-card:hover .project-card__img img{ transform: scale(1.06); }
+.project-card__view{
+  position: absolute; left: 1.4rem; bottom: 1.4rem; z-index: 2;
+  font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--bronze-light);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .45s var(--ease), transform .45s var(--ease);
+}
+.project-card:hover .project-card__view{ opacity: 1; transform: translateY(0); }
+.project-card__meta{
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 1.3rem; gap: 1rem;
+}
+.project-card__name{
+  font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; color: var(--cream);
+}
+.project-card__tag{
+  font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--cream-soft);
+  white-space: nowrap;
+}
+
+.projects__progress{
+  height: 1px; background: var(--cream-line);
+  margin: 0 var(--pad-inline) clamp(3rem, 6vw, 4.5rem);
+}
+.projects__progress-fill{
+  height: 100%; width: 100%; background: var(--bronze);
+  transform: scaleX(0); transform-origin: left;
+}
+
+@media (max-width: 767px){
+  .projects__track{ flex-direction: column; width: auto; padding: 0 var(--pad-inline) 1rem; }
+  .project-card{ width: 100%; }
+  .project-card:not(:last-child){ margin-bottom: 3rem; }
+}
+
+/* ============================================================
+   PROCESS
+============================================================ */
+.process{ background: var(--cream); padding: var(--pad-section) 0; }
+.process__header{ max-width: 46ch; margin-bottom: clamp(3rem, 6vw, 5rem); }
+.process__heading{
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(2.1rem, 4vw, 3.4rem); color: var(--charcoal);
+}
+.process__steps{ position: relative; }
+.process__line{
+  position: absolute; left: 1.15rem; top: .6rem; bottom: .6rem; width: 1px;
+  background: var(--ink-line);
+}
+.process__line-fill{
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bronze);
+  transform: scaleY(0); transform-origin: top;
+}
+.process-step{
+  position: relative;
+  padding: clamp(2.2rem, 4vw, 3rem) 0 clamp(2.2rem, 4vw, 3rem) clamp(3.2rem, 6vw, 4.6rem);
+}
+.process-step__ghost{
+  position: absolute; top: -.6rem; left: clamp(2rem, 5vw, 3.4rem);
+  font-family: var(--font-display); font-weight: 300;
+  font-size: clamp(5.5rem, 11vw, 9rem);
+  color: rgba(28,28,28,.05);
+  line-height: 1; z-index: 0; user-select: none;
+  pointer-events: none;
+}
+.process-step__dot{
+  position: absolute; left: 0; top: 2.9rem;
+  width: .6rem; height: .6rem; border-radius: 50%;
+  background: var(--bronze);
+}
+.process-step__title{
+  position: relative; z-index: 1;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem); color: var(--charcoal);
+  margin-bottom: .8rem;
+}
+.process-step__text{
+  position: relative; z-index: 1;
+  font-size: 1rem; line-height: 1.75; color: var(--ink-soft); max-width: 52ch; font-weight: 300;
+}
+
+/* ============================================================
+   TESTIMONIALS
+============================================================ */
+.testimonials{ background: var(--cream); padding: var(--pad-section) 0; }
+.testimonials .wrap{ max-width: 900px; text-align: center; }
+.testimonials__track{ position: relative; min-height: clamp(220px, 32vw, 280px); }
+.testimonial{
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 1s var(--ease-soft), visibility 1s;
+}
+.testimonial.active{ opacity: 1; visibility: visible; }
+.testimonial__quote{
+  font-family: var(--font-display); font-weight: 400; font-style: normal;
+  font-size: clamp(1.4rem, 3vw, 2.1rem); line-height: 1.5; color: var(--charcoal);
+  max-width: 34ch;
+}
+.testimonial__quote::before{ content: '\201C'; color: var(--bronze); }
+.testimonial__quote::after{ content: '\201D'; color: var(--bronze); }
+.testimonial__name{
+  margin-top: 1.8rem; font-size: .82rem; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--charcoal); font-weight: 500;
+}
+.testimonial__role{ margin-top: .35rem; font-size: .8rem; color: var(--ink-soft); }
+.testimonials__dots{
+  display: flex; justify-content: center; gap: .7rem; margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+.testimonials__dot{
+  width: .5rem; height: .5rem; border-radius: 50%;
+  border: 1px solid var(--bronze); background: transparent;
+  cursor: pointer; transition: background-color .35s var(--ease);
+}
+.testimonials__dot.active{ background: var(--bronze); }
+
+/* ============================================================
+   CONTACT
+============================================================ */
+.contact{ background: var(--cream); padding: var(--pad-section) 0; }
+.contact .wrap{
+  display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2.5rem, 6vw, 6rem);
+}
+.contact__heading{
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(2.1rem, 4vw, 3.4rem); color: var(--charcoal);
+  margin-bottom: clamp(2.2rem, 5vw, 3.5rem);
+}
+.contact__detail{ margin-bottom: 1.8rem; }
+.contact__detail-label{
+  font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--bronze);
+  margin-bottom: .5rem;
+}
+.contact__detail-value{
+  font-size: 1.05rem; line-height: 1.6; color: var(--charcoal); font-weight: 300;
+}
+.contact__detail-value a:hover{ color: var(--bronze); }
+
+.contact-form__row{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 1.6rem; }
+.field{ position: relative; margin-bottom: 2.2rem; }
+.field--full{ grid-column: 1 / -1; }
+.field__control{
+  width: 100%;
+  border: none; border-bottom: 1px solid var(--ink-line);
+  background: transparent;
+  padding: .6rem .1rem .6rem;
+  font-family: var(--font-body); font-weight: 300; font-size: 1rem;
+  color: var(--charcoal);
+}
+.field__control:focus{ outline: none; }
+textarea.field__control{ resize: none; min-height: 4.2rem; }
+.field__label{
+  position: absolute; left: .1rem; top: .6rem;
+  font-size: 1rem; color: var(--ink-soft);
+  pointer-events: none;
+  transition: transform .3s var(--ease), font-size .3s var(--ease), color .3s var(--ease);
+}
+.field__line{
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--bronze); transform: scaleX(0); transform-origin: left;
+  transition: transform .4s var(--ease);
+}
+.field__control:focus ~ .field__line{ transform: scaleX(1); }
+.field__control:focus ~ .field__label,
+.field__control:not(:placeholder-shown) ~ .field__label{
+  transform: translateY(-1.5rem);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--bronze);
+  text-transform: uppercase;
+}
+select.field__control{ appearance: none; cursor: pointer; }
+select.field__control ~ .field__label{
+  transform: translateY(-1.5rem); font-size: .72rem; letter-spacing: .08em; color: var(--bronze); text-transform: uppercase;
+}
+
+.contact-form__success{
+  display: none;
+  font-family: var(--font-display); font-size: 1.5rem; color: var(--charcoal);
+  padding: 2rem 0;
+}
+.contact-form__success span{ display: block; font-family: var(--font-body); font-size: .9rem; color: var(--ink-soft); margin-top: .6rem; }
+.contact-form.is-sent .contact-form__fields{ display: none; }
+.contact-form.is-sent .contact-form__success{ display: block; }
+
+@media (max-width: 900px){
+  .contact .wrap{ grid-template-columns: 1fr; }
+}
+@media (max-width: 560px){
+  .contact-form__row{ grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+.footer{
+  background: var(--charcoal-2); color: var(--cream);
+  position: relative; overflow: hidden;
+  padding-top: clamp(4rem, 8vw, 6rem);
+}
+.footer__top{
+  display: flex; flex-wrap: wrap; gap: 3rem; justify-content: space-between;
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+  border-bottom: 1px solid var(--cream-line);
+}
+.footer__logo{
+  font-family: var(--font-display); font-size: 1.6rem; color: var(--cream);
+}
+.footer__logo small{
+  display: block; margin-top: .5rem;
+  font-family: var(--font-body); font-size: .62rem; letter-spacing: .28em;
+  text-transform: uppercase; color: var(--bronze-light);
+}
+.footer__links{ display: flex; gap: clamp(1.5rem, 3vw, 3rem); flex-wrap: wrap; }
+.footer__links a{
+  font-size: .82rem; letter-spacing: .04em; color: var(--cream-soft);
+  transition: color .3s var(--ease);
+}
+.footer__links a:hover{ color: var(--bronze-light); }
+.footer__social{ display: flex; gap: 1rem; align-items: center; }
+.footer__social a{
+  width: 2.2rem; height: 2.2rem; border-radius: 50%;
+  border: 1px solid var(--cream-line);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--cream-soft);
+  transition: border-color .3s var(--ease), color .3s var(--ease);
+}
+.footer__social a:hover{ border-color: var(--bronze); color: var(--bronze-light); }
+.footer__social svg{ width: 15px; height: 15px; }
+
+.footer__bottom{
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  padding-block: 1.6rem;
+  font-size: .74rem; color: var(--cream-soft);
+  position: relative; z-index: 2;
+}
+.footer__ghost{
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(4rem, 16vw, 11rem);
+  line-height: .78;
+  color: var(--cream);
+  opacity: .045;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  margin-top: clamp(1rem, 4vw, 2rem);
+}
+
+/* ============================================================
+   REDUCED MOTION FALLBACKS
+============================================================ */
+html.reduce-motion .intro-overlay{ display: none !important; }
+html.reduce-motion .cursor{ display: none !important; }
+html.reduce-motion, html.reduce-motion a, html.reduce-motion button{ cursor: auto !important; }
+
+html.reduce-motion .mask-inner,
+html.reduce-motion .char,
+html.reduce-motion .hero__sub,
+html.reduce-motion .hero__cta,
+html.reduce-motion .about__rule,
+html.reduce-motion .service-block__rule,
+html.reduce-motion .projects__progress-fill,
+html.reduce-motion .process__line-fill,
+html.reduce-motion .hero__img-wrap img{
+  opacity: 1 !important;
+  transform: none !important;
+  scale: 1 !important;
+  visibility: visible !important;
+}
+
+html.reduce-motion .services__heading{ position: static; opacity: 1 !important; display: block; margin-bottom: .6rem; font-size: clamp(1.4rem,3vw,2rem); }
+html.reduce-motion .services__heading-stack{ height: auto; }
+
+html.reduce-motion .projects__track{ flex-direction: column; width: auto; }
+html.reduce-motion .project-card{ width: 100%; margin-bottom: 3rem; }
+html.reduce-motion .projects{ height: auto !important; }
+
+html.reduce-motion .testimonial{ position: static; opacity: 1 !important; visibility: visible !important; margin-bottom: 3rem; }
+html.reduce-motion .testimonials__dots{ display: none; }
+
+@media (prefers-reduced-motion: reduce){
+  .hero__scroll-line::after{ animation: none; top: 0; }
+}
+
+</style>
+</head>
+<body class="is-loading">
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<div class="intro-overlay" aria-hidden="true">
+  <div class="intro-overlay__name">
+    Tam Hadreen
+    <span class="intro-overlay__sub">Interiors</span>
+  </div>
+</div>
+
+<header class="nav">
+  <a href="#hero" class="nav__logo">Tam Hadreen<small>Interiors &middot; Dubai</small></a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="#about" class="nav__link">About</a>
+    <a href="#services" class="nav__link">Services</a>
+    <a href="#projects" class="nav__link">Projects</a>
+    <a href="#process" class="nav__link">Process</a>
+    <a href="#contact" class="nav__link">Contact</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section id="hero" class="hero">
+    <div class="hero__img-wrap">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80" alt="A warm, minimal living interior with natural light">
+    </div>
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+      <h1 class="hero__heading splitting" data-splitting>A Quieter Kind of Luxury</h1>
+      <p class="hero__sub">Tam Hadreen Interiors designs and builds refined residential, hospitality, and commercial spaces across Dubai — shaped by material honesty and a decade of considered craft.</p>
+      <div class="hero__cta">
+        <a href="#projects" class="btn btn--outline js-nav-link"><span>View Our Work</span></a>
+      </div>
+    </div>
+    <div class="hero__scroll" aria-hidden="true">
+      <span class="hero__scroll-line"></span>
+      Scroll
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="about">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">About The Studio</span>
+        <h2 class="about__heading splitting" data-splitting>A Studio Built On Restraint</h2>
+      </div>
+      <div class="about__body">
+        <p>
+          <span class="reveal-line"><span class="mask-inner">Tam Hadreen Interiors was founded on a simple belief —</span></span>
+          <span class="reveal-line"><span class="mask-inner">that the best interiors are felt before they're noticed.</span></span>
+        </p>
+        <p>
+          <span class="reveal-line"><span class="mask-inner">We work across Dubai's residential, hospitality, and</span></span>
+          <span class="reveal-line"><span class="mask-inner">commercial landscape, shaping space through material</span></span>
+          <span class="reveal-line"><span class="mask-inner">honesty and considered proportion.</span></span>
+        </p>
+        <p>
+          <span class="reveal-line"><span class="mask-inner">Every project moves through the same hands, from first</span></span>
+          <span class="reveal-line"><span class="mask-inner">sketch to final handover — one studio, one standard.</span></span>
+        </p>
+      </div>
+      <div class="about__rule" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats">
+    <div class="wrap">
+      <div class="stat">
+        <span class="stat__number" data-count="14" data-suffix="">0</span>
+        <span class="stat__label">Years Established</span>
+      </div>
+      <div class="stat">
+        <span class="stat__number" data-count="180" data-suffix="+">0</span>
+        <span class="stat__label">Projects Delivered</span>
+      </div>
+      <div class="stat">
+        <span class="stat__number" data-count="92000" data-suffix="+">0</span>
+        <span class="stat__label">Sq. M. Completed</span>
+      </div>
+      <div class="stat">
+        <span class="stat__number" data-count="36" data-suffix="">0</span>
+        <span class="stat__label">Studio Team</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="services">
+    <div class="wrap services__inner">
+      <div class="services__sticky">
+        <span class="eyebrow">What We Do</span>
+        <div class="services__heading-stack">
+          <h2 class="services__heading active" data-index="0">Design</h2>
+          <h2 class="services__heading" data-index="1">Fitout</h2>
+          <h2 class="services__heading" data-index="2">Joinery</h2>
+          <h2 class="services__heading" data-index="3">Project Management</h2>
+        </div>
+      </div>
+
+      <div class="services__list">
+        <div class="service-block" data-index="0">
+          <div class="service-block__num">01</div>
+          <h3 class="service-block__title">Design</h3>
+          <p class="service-block__text service-block__reveal">Concept to detailed design across residential, hospitality, and commercial interiors — spatial planning, material palettes, lighting design, and furniture specification tailored to how each space will actually be used.</p>
+          <div class="service-block__rule" aria-hidden="true"></div>
+        </div>
+        <div class="service-block" data-index="1">
+          <div class="service-block__num">02</div>
+          <h3 class="service-block__title">Fitout</h3>
+          <p class="service-block__text service-block__reveal">Full turnkey fitout delivery, from MEP coordination to final finishes, managed end-to-end by our own site teams across Dubai and the wider Emirates.</p>
+          <div class="service-block__rule" aria-hidden="true"></div>
+        </div>
+        <div class="service-block" data-index="2">
+          <div class="service-block__num">03</div>
+          <h3 class="service-block__title">Joinery</h3>
+          <p class="service-block__text service-block__reveal">Bespoke joinery designed and built in our own workshop — kitchens, wardrobes, reception desks, and architectural millwork, finished to exacting tolerance.</p>
+          <div class="service-block__rule" aria-hidden="true"></div>
+        </div>
+        <div class="service-block" data-index="3">
+          <div class="service-block__num">04</div>
+          <h3 class="service-block__title">Project Management</h3>
+          <p class="service-block__text service-block__reveal">Independent project management for clients coordinating multiple consultants and contractors — one point of accountability, from concept through to keys.</p>
+          <div class="service-block__rule" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects" class="projects">
+    <div class="projects__header wrap">
+      <div>
+        <span class="eyebrow">Selected Work</span>
+        <h2 class="projects__heading splitting" data-splitting>Recent Projects</h2>
+      </div>
+      <p class="projects__note">Six recent projects across residential, hospitality, office, and retail — Dubai, 2021&ndash;2024.</p>
+    </div>
+
+    <div class="projects__track-wrap">
+      <div class="projects__track">
+
+        <article class="project-card">
+          <div class="project-card__img">
+            <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200&q=80" alt="Marasi Bay Residence living space">
+            <span class="project-card__view">View Project &rarr;</span>
+          </div>
+          <div class="project-card__meta">
+            <span class="project-card__name">Marasi Bay Residence</span>
+            <span class="project-card__tag">Residential &middot; 2024</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-card__img">
+            <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&q=80" alt="Al Seef Boutique Hotel lounge">
+            <span class="project-card__view">View Project &rarr;</span>
+          </div>
+          <div class="project-card__meta">
+            <span class="project-card__name">Al Seef Boutique Hotel</span>
+            <span class="project-card__tag">Hospitality &middot; 2023</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-card__img">
+            <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&q=80" alt="DIFC Executive Suite office interior">
+            <span class="project-card__view">View Project &rarr;</span>
+          </div>
+          <div class="project-card__meta">
+            <span class="project-card__name">DIFC Executive Suite</span>
+            <span class="project-card__tag">Office &middot; 2024</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-card__img">
+            <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80" alt="Jumeirah Coastal Villa kitchen">
+            <span class="project-card__view">View Project &rarr;</span>
+          </div>
+          <div class="project-card__meta">
+            <span class="project-card__name">Jumeirah Coastal Villa</span>
+            <span class="project-card__tag">Residential &middot; 2022</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-card__img">
+            <img src="https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1200&q=80" alt="City Walk Flagship Store interior">
+            <span class="project-card__view">View Project &rarr;</span>
+          </div>
+          <div class="project-card__meta">
+            <span class="project-card__name">City Walk Flagship Store</span>
+            <span class="project-card__tag">Retail &middot; 2023</span>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <div class="project-card__img">
+            <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80" alt="Emirates Hills Majlis lounge">
+            <span class="project-card__view">View Project &rarr;</span>
+          </div>
+          <div class="project-card__meta">
+            <span class="project-card__name">Emirates Hills Majlis</span>
+            <span class="project-card__tag">Residential &middot; 2021</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="projects__progress" aria-hidden="true">
+      <div class="projects__progress-fill"></div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section id="process" class="process">
+    <div class="wrap">
+      <div class="process__header">
+        <span class="eyebrow">How We Work</span>
+        <h2 class="process__heading splitting" data-splitting>From First Sketch To Final Key</h2>
+      </div>
+
+      <div class="process__steps">
+        <div class="process__line" aria-hidden="true"><div class="process__line-fill"></div></div>
+
+        <div class="process-step">
+          <span class="process-step__ghost" aria-hidden="true">01</span>
+          <span class="process-step__dot" aria-hidden="true"></span>
+          <h3 class="process-step__title">Consultation</h3>
+          <p class="process-step__text">We start with a conversation, not a questionnaire — site visits, honest budgets, and a shared understanding of how you'll use the space.</p>
+        </div>
+        <div class="process-step">
+          <span class="process-step__ghost" aria-hidden="true">02</span>
+          <span class="process-step__dot" aria-hidden="true"></span>
+          <h3 class="process-step__title">Design</h3>
+          <p class="process-step__text">Concept development, material studies, and detailed drawings, refined together until every surface and sightline earns its place.</p>
+        </div>
+        <div class="process-step">
+          <span class="process-step__ghost" aria-hidden="true">03</span>
+          <span class="process-step__dot" aria-hidden="true"></span>
+          <h3 class="process-step__title">Execution</h3>
+          <p class="process-step__text">Our joinery workshop and site teams build to the drawing, not around it. Weekly walkthroughs keep you close to the work.</p>
+        </div>
+        <div class="process-step">
+          <span class="process-step__ghost" aria-hidden="true">04</span>
+          <span class="process-step__dot" aria-hidden="true"></span>
+          <h3 class="process-step__title">Handover</h3>
+          <p class="process-step__text">A final walkthrough, a snag-free handover, and full documentation — so the space keeps working long after we've left it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <div class="wrap">
+      <span class="eyebrow">Client Word</span>
+      <div class="testimonials__track">
+        <blockquote class="testimonial active" data-index="0">
+          <p class="testimonial__quote">Tam Hadreen didn't just design our home — they understood how we wanted to live in it. Every detail feels considered, nothing feels decorated.</p>
+          <cite class="testimonial__name">Layla Al Mansoori</cite>
+          <span class="testimonial__role">Homeowner, Emirates Hills</span>
+        </blockquote>
+        <blockquote class="testimonial" data-index="1">
+          <p class="testimonial__quote">Their fitout team delivered our flagship store two weeks ahead of schedule, without a single compromise on finish quality.</p>
+          <cite class="testimonial__name">Karim Haddad</cite>
+          <span class="testimonial__role">Retail Director, City Walk</span>
+        </blockquote>
+        <blockquote class="testimonial" data-index="2">
+          <p class="testimonial__quote">We've worked with design studios across three continents. Few understand restraint the way this team does.</p>
+          <cite class="testimonial__name">Sophie Bergman</cite>
+          <span class="testimonial__role">General Manager, Al Seef Hotel Group</span>
+        </blockquote>
+      </div>
+      <div class="testimonials__dots" role="tablist" aria-label="Testimonials">
+        <button class="testimonials__dot active" data-index="0" aria-label="Testimonial 1"></button>
+        <button class="testimonials__dot" data-index="1" aria-label="Testimonial 2"></button>
+        <button class="testimonials__dot" data-index="2" aria-label="Testimonial 3"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Get In Touch</span>
+        <h2 class="contact__heading splitting" data-splitting>Start Your Project</h2>
+
+        <div class="contact__detail reveal-line"><span class="mask-inner">
+          <span class="contact__detail-label">Studio</span>
+          <span class="contact__detail-value">Building 6, Dubai Design District (d3)<br>Dubai, United Arab Emirates</span>
+        </span></div>
+
+        <div class="contact__detail reveal-line"><span class="mask-inner">
+          <span class="contact__detail-label">Phone</span>
+          <span class="contact__detail-value"><a href="tel:+97145520198">+971 4 552 0198</a></span>
+        </span></div>
+
+        <div class="contact__detail reveal-line"><span class="mask-inner">
+          <span class="contact__detail-label">Email</span>
+          <span class="contact__detail-value"><a href="mailto:studio@tamhadreeninteriors.ae">studio@tamhadreeninteriors.ae</a></span>
+        </span></div>
+
+        <div class="contact__detail reveal-line"><span class="mask-inner">
+          <span class="contact__detail-label">Hours</span>
+          <span class="contact__detail-value">Sunday&ndash;Thursday, 9:00&ndash;18:00</span>
+        </span></div>
+      </div>
+
+      <form class="contact-form" novalidate>
+        <div class="contact-form__fields">
+          <div class="contact-form__row">
+            <div class="field">
+              <input class="field__control" type="text" id="name" name="name" placeholder=" " required>
+              <label class="field__label" for="name">Name</label>
+              <span class="field__line" aria-hidden="true"></span>
+            </div>
+            <div class="field">
+              <input class="field__control" type="email" id="email" name="email" placeholder=" " required>
+              <label class="field__label" for="email">Email</label>
+              <span class="field__line" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="field field--full">
+            <select class="field__control" id="project-type" name="project-type">
+              <option value="Residential">Residential</option>
+              <option value="Hospitality">Hospitality</option>
+              <option value="Retail">Retail</option>
+              <option value="Office">Office</option>
+              <option value="Other">Other</option>
+            </select>
+            <label class="field__label" for="project-type">Project Type</label>
+            <span class="field__line" aria-hidden="true"></span>
+          </div>
+
+          <div class="field field--full">
+            <textarea class="field__control" id="message" name="message" placeholder=" " rows="3" required></textarea>
+            <label class="field__label" for="message">Message</label>
+            <span class="field__line" aria-hidden="true"></span>
+          </div>
+
+          <button type="submit" class="btn btn--fill"><span>Send Enquiry</span></button>
+        </div>
+
+        <div class="contact-form__success">
+          Thank you.
+          <span>We've received your enquiry and will be in touch within one business day.</span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__top">
+      <a href="#hero" class="footer__logo">Tam Hadreen Interiors<small>Interior Design &amp; Fitout &middot; Dubai</small></a>
+      <ul class="footer__links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="footer__social">
+        <a href="#" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1"/></svg>
+        </a>
+        <a href="#" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="7.5" y1="10.5" x2="7.5" y2="16.5"/><circle cx="7.5" cy="7.2" r="0.6" fill="currentColor"/><path d="M11.5 16.5v-4c0-1.3.9-2.2 2.1-2.2s2 .9 2 2.2v4"/></svg>
+        </a>
+        <a href="#" aria-label="Pinterest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M9.5 18c1-3.2 1.6-5.6 2.2-8.2.6-2.4 3.8-2.2 4.4.1.5 2-1 4.1-3 4-1.2-.1-1.8-1-1.6-2.2"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer__ghost" aria-hidden="true">TAM HADREEN</div>
+    <div class="footer__bottom">
+      <span>&copy; 2026 Tam Hadreen Interiors L.L.C. All rights reserved.</span>
+      <span>Dubai, United Arab Emirates</span>
+    </div>
+  </div>
+</footer>
+
+<script defer>
+(function(){
+  "use strict";
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var html = document.documentElement;
+  var isMobile = window.innerWidth < 768;
+
+  if (reduceMotion) {
+    html.classList.add('reduce-motion');
+    html.classList.remove('is-loading');
+    ready();
+    return;
+  }
+
+  if (window.matchMedia('(hover: none), (max-width: 767px)').matches) {
+    html.classList.add('no-cursor');
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(ready).catch(ready);
+  } else {
+    window.addEventListener('load', ready);
+  }
+
+  function ready(){
+    if (reduceMotion) { initStatic(); return; }
+    init();
+  }
+
+  /* ---------------------------------------------------------
+     STATIC (reduced motion) PATH
+  --------------------------------------------------------- */
+  function initStatic(){
+    initNavScroll(true);
+    initNavLinks(null);
+    initStatsStatic();
+    initServicesStatic();
+    initTestimonials(true);
+    initContactForm();
+    initImageLoad();
+  }
+
+  function initStatsStatic(){
+    document.querySelectorAll('.stat__number').forEach(function(el){
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      var suffix = el.getAttribute('data-suffix') || '';
+      el.textContent = target.toLocaleString() + suffix;
+    });
+  }
+  function initServicesStatic(){
+    document.querySelectorAll('.services__heading').forEach(function(h){ h.classList.add('active'); });
+  }
+
+  /* ---------------------------------------------------------
+     FULL ANIMATED PATH
+  --------------------------------------------------------- */
+  function init(){
+    gsap.registerPlugin(ScrollTrigger);
+
+    var lenis = new Lenis({ duration: 1.2, smoothWheel: true });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(function(time){ lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+    lenis.stop();
+
+    initCursor();
+    initImageLoad();
+
+    var splitHeroChars = Splitting({ target: '.hero__heading', by: 'chars' })[0];
+
+    initNavScroll(false);
+    initNavLinks(lenis);
+    initHeroScroll();
+    initAbout();
+    initStats();
+    initServices();
+    initProjects();
+    initProcess();
+    initTestimonials(false);
+    initContact();
+    initContactForm();
+
+    runIntro(lenis, splitHeroChars);
+
+    window.addEventListener('resize', debounce(function(){
+      ScrollTrigger.refresh();
+    }, 250));
+  }
+
+  /* ---------- helpers ---------- */
+  function debounce(fn, wait){
+    var t;
+    return function(){
+      clearTimeout(t);
+      var args = arguments;
+      t = setTimeout(function(){ fn.apply(null, args); }, wait);
+    };
+  }
+
+  function revealWordsIn(result, opts){
+    opts = opts || {};
+    var inners = result.words.map(function(w){ return w.querySelector('.mask-inner'); });
+    gsap.set(inners, { yPercent: 112, opacity: 0 });
+    gsap.to(inners, {
+      yPercent: 0, opacity: 1, duration: 1, ease: 'power4.out',
+      stagger: 0.05,
+      scrollTrigger: opts.trigger ? { trigger: opts.trigger, start: 'top 84%' } : undefined,
+      delay: opts.delay || 0
+    });
+  }
+
+  /* ---------- intro ---------- */
+  function runIntro(lenis, splitHero){
+    var tl = gsap.timeline({
+      defaults: { ease: 'power4.inOut' },
+      onComplete: function(){
+        html.classList.remove('is-loading');
+        lenis.start();
+      }
+    });
+
+    var heroTl = gsap.timeline();
+    heroTl.set(splitHero.chars, { yPercent: 130, opacity: 0 });
+    heroTl.to(splitHero.chars, {
+      yPercent: 0, opacity: 1, duration: 1, ease: 'power4.out', stagger: 0.016
+    });
+    heroTl.to('.hero__sub', { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.55');
+    heroTl.to('.hero__cta', { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, '-=0.6');
+
+    tl.to({}, { duration: 0.55 })
+      .to('.intro-overlay', {
+        yPercent: -100, duration: 1.1,
+        onStart: function(){ html.classList.remove('is-loading'); lenis.start(); }
+      })
+      .add(heroTl, '>');
+  }
+
+  /* ---------- nav ---------- */
+  function initNavScroll(staticMode){
+    var nav = document.querySelector('.nav');
+    if (staticMode || !window.ScrollTrigger) {
+      window.addEventListener('scroll', function(){
+        if (window.scrollY > window.innerHeight * 0.8) nav.classList.add('nav--solid');
+        else nav.classList.remove('nav--solid');
+      });
+      return;
+    }
+    ScrollTrigger.create({
+      trigger: '.hero',
+      start: 'top top',
+      end: 'bottom top',
+      onLeave: function(){ nav.classList.add('nav--solid'); },
+      onEnterBack: function(){ nav.classList.remove('nav--solid'); }
+    });
+  }
+
+  function initNavLinks(lenis){
+    document.querySelectorAll('.nav__link, .js-nav-link, .footer__links a[href^="#"], .footer__logo').forEach(function(link){
+      link.addEventListener('click', function(e){
+        var href = link.getAttribute('href');
+        if (!href || href.charAt(0) !== '#') return;
+        var target = document.querySelector(href);
+        if (!target) return;
+        e.preventDefault();
+        if (lenis) {
+          lenis.scrollTo(target, { offset: -70, duration: 1.4 });
+        } else {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  /* ---------- cursor ---------- */
+  function initCursor(){
+    if (html.classList.contains('no-cursor')) return;
+    var cursor = document.querySelector('.cursor');
+    var mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    var pos = { x: mouse.x, y: mouse.y };
+
+    window.addEventListener('mousemove', function(e){
+      mouse.x = e.clientX; mouse.y = e.clientY;
+    });
+
+    gsap.ticker.add(function(){
+      pos.x += (mouse.x - pos.x) * 0.18;
+      pos.y += (mouse.y - pos.y) * 0.18;
+      cursor.style.transform = 'translate(' + pos.x + 'px,' + pos.y + 'px) translate(-50%,-50%)';
+    });
+
+    document.querySelectorAll('a, button, .field__control').forEach(function(el){
+      el.addEventListener('mouseenter', function(){ cursor.classList.add('cursor--hover'); });
+      el.addEventListener('mouseleave', function(){ cursor.classList.remove('cursor--hover'); });
+    });
+  }
+
+  /* ---------- image blur-load ---------- */
+  function initImageLoad(){
+    document.querySelectorAll('img').forEach(function(img){
+      if (img.complete && img.naturalWidth) {
+        img.style.filter = 'none'; img.style.opacity = '1';
+        return;
+      }
+      img.style.filter = 'blur(16px)';
+      img.style.opacity = '0';
+      img.style.transition = 'filter 1s ease, opacity 1s ease';
+      img.addEventListener('load', function(){
+        img.style.filter = 'none';
+        img.style.opacity = '1';
+      });
+    });
+  }
+
+  /* ---------- hero scroll behaviour ---------- */
+  function initHeroScroll(){
+    gsap.to('.hero__img-wrap img', {
+      scale: 1, yPercent: 8, ease: 'none',
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+    });
+
+    var indicator = document.querySelector('.hero__scroll');
+    ScrollTrigger.create({
+      trigger: '.hero', start: 'top top', end: '+=140',
+      onUpdate: function(self){
+        indicator.style.opacity = self.progress > 0.08 ? 0 : 1;
+      }
+    });
+  }
+
+  /* ---------- about ---------- */
+  function initAbout(){
+    revealSectionHeading('.about__heading', '.about');
+
+    var lines = document.querySelectorAll('.about .reveal-line .mask-inner');
+    gsap.set(lines, { yPercent: 100, opacity: 0 });
+    gsap.to(lines, {
+      yPercent: 0, opacity: 1, duration: 0.9, ease: 'power4.out', stagger: 0.07,
+      scrollTrigger: { trigger: '.about__body', start: 'top 82%' }
+    });
+
+    gsap.to('.about__rule', {
+      scaleX: 1, duration: 1.2, ease: 'power3.inOut',
+      scrollTrigger: { trigger: '.about__rule', start: 'top 90%' }
+    });
+  }
+
+  /* ---------- shared section-heading reveal (used by about/projects/process/contact) ---------- */
+  function revealSectionHeading(selector, triggerSelector){
+    var el = document.querySelector(selector);
+    if (!el) return;
+    var result = Splitting({ target: el, by: 'words' })[0];
+    result.words.forEach(function(w){
+      var inner = document.createElement('span');
+      inner.className = 'mask-inner';
+      inner.innerHTML = w.innerHTML;
+      w.innerHTML = '';
+      w.appendChild(inner);
+    });
+    revealWordsIn(result, { trigger: triggerSelector || el });
+  }
+
+  /* ---------- stats ---------- */
+  function initStats(){
+    var stats = document.querySelectorAll('.stat__number');
+    ScrollTrigger.create({
+      trigger: '.stats', start: 'top 78%', once: true,
+      onEnter: function(){
+        stats.forEach(function(el, i){
+          var target = parseInt(el.getAttribute('data-count'), 10);
+          var suffix = el.getAttribute('data-suffix') || '';
+          var obj = { val: 0 };
+          gsap.to(obj, {
+            val: target, duration: 1.8, delay: i * 0.14, ease: 'power2.out',
+            onUpdate: function(){
+              el.textContent = Math.floor(obj.val).toLocaleString() + suffix;
+            }
+          });
+        });
+      }
+    });
+  }
+
+  /* ---------- services ---------- */
+  function initServices(){
+    var blocks = gsap.utils.toArray('.service-block');
+    var headings = document.querySelectorAll('.services__heading');
+
+    function setActive(i){
+      headings.forEach(function(h, idx){ h.classList.toggle('active', idx === i); });
+    }
+
+    blocks.forEach(function(block, i){
+      ScrollTrigger.create({
+        trigger: block, start: 'top center', end: 'bottom center',
+        onEnter: function(){ setActive(i); },
+        onEnterBack: function(){ setActive(i); }
+      });
+
+      gsap.to(block.querySelector('.service-block__rule'), {
+        scaleX: 1, duration: 1, ease: 'power3.out',
+        scrollTrigger: { trigger: block, start: 'top 82%' }
+      });
+
+      gsap.from([block.querySelector('.service-block__num'), block.querySelector('.service-block__title'), block.querySelector('.service-block__text')], {
+        y: 26, opacity: 0, duration: 0.85, ease: 'power3.out', stagger: 0.08,
+        scrollTrigger: { trigger: block, start: 'top 82%' }
+      });
+    });
+  }
+
+  /* ---------- projects ---------- */
+  function initProjects(){
+    revealSectionHeading('.projects__heading', '.projects__header');
+
+    var progressFill = document.querySelector('.projects__progress-fill');
+
+    ScrollTrigger.matchMedia({
+      '(min-width: 768px)': function(){
+        var track = document.querySelector('.projects__track');
+
+        function getScrollAmount(){
+          return Math.max(0, track.scrollWidth - window.innerWidth);
+        }
+
+        var horizontalTween = gsap.to(track, {
+          x: function(){ return -getScrollAmount(); },
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.projects',
+            start: 'top top',
+            end: function(){ return '+=' + getScrollAmount(); },
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+            onUpdate: function(self){
+              progressFill.style.transform = 'scaleX(' + self.progress + ')';
+            }
+          }
+        });
+
+        document.querySelectorAll('.project-card').forEach(function(card){
+          var img = card.querySelector('.project-card__img img');
+          gsap.fromTo(img, { yPercent: -8 }, {
+            yPercent: 8, ease: 'none',
+            scrollTrigger: {
+              trigger: card,
+              containerAnimation: horizontalTween,
+              start: 'left right',
+              end: 'right left',
+              scrub: true
+            }
+          });
+        });
+      },
+      '(max-width: 767px)': function(){
+        gsap.utils.toArray('.project-card').forEach(function(card){
+          gsap.from(card, {
+            y: 32, opacity: 0, duration: 0.8, ease: 'power3.out',
+            scrollTrigger: { trigger: card, start: 'top 90%' }
+          });
+        });
+      }
+    });
+  }
+
+  /* ---------- process ---------- */
+  function initProcess(){
+    revealSectionHeading('.process__heading', '.process__header');
+
+    gsap.to('.process__line-fill', {
+      scaleY: 1, ease: 'none',
+      scrollTrigger: {
+        trigger: '.process__steps', start: 'top center', end: 'bottom center', scrub: true
+      }
+    });
+
+    gsap.utils.toArray('.process-step').forEach(function(step){
+      gsap.from(step, {
+        y: 36, opacity: 0, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: step, start: 'top 85%' }
+      });
+    });
+  }
+
+  /* ---------- testimonials ---------- */
+  function initTestimonials(staticMode){
+    var items = document.querySelectorAll('.testimonial');
+    var dots = document.querySelectorAll('.testimonials__dot');
+    var index = 0, timer;
+
+    function show(i){
+      items.forEach(function(it, idx){ it.classList.toggle('active', idx === i); });
+      dots.forEach(function(d, idx){ d.classList.toggle('active', idx === i); });
+      index = i;
+    }
+    function next(){ show((index + 1) % items.length); }
+    function start(){ timer = setInterval(next, 6000); }
+    function stop(){ clearInterval(timer); }
+
+    dots.forEach(function(d, i){
+      d.addEventListener('click', function(){ show(i); stop(); if(!staticMode) start(); });
+    });
+
+    var wrap = document.querySelector('.testimonials__track');
+    wrap.addEventListener('mouseenter', stop);
+    wrap.addEventListener('mouseleave', function(){ if(!staticMode) start(); });
+
+    show(0);
+    if (!staticMode) start();
+  }
+
+  /* ---------- contact ---------- */
+  function initContact(){
+    revealSectionHeading('.contact__heading', '.contact .wrap > div:first-child');
+
+    var lines = document.querySelectorAll('.contact__detail.reveal-line .mask-inner');
+    gsap.set(lines, { yPercent: 100, opacity: 0 });
+    gsap.to(lines, {
+      yPercent: 0, opacity: 1, duration: 0.9, ease: 'power4.out', stagger: 0.1,
+      scrollTrigger: { trigger: '.contact .wrap > div:first-child', start: 'top 78%' }
+    });
+  }
+
+  /* ---------- contact form ---------- */
+  function initContactForm(){
+    var form = document.querySelector('.contact-form');
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      form.classList.add('is-sent');
+    });
+  }
+
+})();
+</script>
+
+</body>
+</html>
