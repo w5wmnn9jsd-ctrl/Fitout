@@ -14,6 +14,15 @@
 
 <link rel="stylesheet" href="https://unpkg.com/splitting/dist/splitting.css">
 
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
 <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
@@ -308,6 +317,16 @@ html.no-cursor, html.no-cursor a, html.no-cursor button{ cursor: auto; }
 .hero__img-wrap img{
   width: 100%; height: 100%; object-fit: cover;
   transform: scale(1.18);
+}
+.hero__canvas{
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  background: linear-gradient(135deg, var(--charcoal) 0%, var(--bronze) 55%, var(--cream) 100%);
+  mix-blend-mode: overlay;
+  opacity: .75;
 }
 .hero__overlay{
   position: absolute; inset: 0;
@@ -852,6 +871,7 @@ html.reduce-motion .testimonials__dots{ display: none; }
       <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80" alt="A warm, minimal living interior with natural light">
     </div>
     <div class="hero__overlay"></div>
+    <canvas id="th-hero-canvas" class="hero__canvas" aria-hidden="true"></canvas>
     <div class="hero__content">
       <h1 class="hero__heading splitting" data-splitting>A Quieter Kind of Luxury</h1>
       <p class="hero__sub">Tam Hadreen Interiors designs and builds refined residential, hospitality, and commercial spaces across Dubai — shaped by material honesty and a decade of considered craft.</p>
@@ -1219,6 +1239,8 @@ html.reduce-motion .testimonials__dots{ display: none; }
 (function(){
   "use strict";
 
+  window.TH = { lenisScroll: 0, scrollVelocity: 0, mouseX: 0, mouseY: 0 };
+
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var html = document.documentElement;
   var isMobile = window.innerWidth < 768;
@@ -1276,7 +1298,11 @@ html.reduce-motion .testimonials__dots{ display: none; }
     gsap.registerPlugin(ScrollTrigger);
 
     var lenis = new Lenis({ duration: 1.2, smoothWheel: true });
-    lenis.on('scroll', ScrollTrigger.update);
+    lenis.on('scroll', function(e){
+      ScrollTrigger.update();
+      window.TH.lenisScroll = e.scroll;
+      window.TH.scrollVelocity = e.velocity;
+    });
     gsap.ticker.add(function(time){ lenis.raf(time * 1000); });
     gsap.ticker.lagSmoothing(0);
     lenis.stop();
@@ -1398,6 +1424,8 @@ html.reduce-motion .testimonials__dots{ display: none; }
 
     window.addEventListener('mousemove', function(e){
       mouse.x = e.clientX; mouse.y = e.clientY;
+      window.TH.mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      window.TH.mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
     });
 
     gsap.ticker.add(function(){
@@ -1649,6 +1677,184 @@ html.reduce-motion .testimonials__dots{ display: none; }
   }
 
 })();
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+try {
+
+  var heroSection = document.querySelector('.hero');
+  var canvas = document.getElementById('th-hero-canvas');
+
+  if (!heroSection || !canvas) {
+    throw new Error('TH hero canvas: required elements not found');
+  }
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: true
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  window.TH.renderer = renderer;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 5);
+
+  var uniforms = {
+    uTime: { value: 0 },
+    uResolution: { value: new THREE.Vector2(1, 1) },
+    uColorA: { value: new THREE.Color(0x1c1c1c) },
+    uColorB: { value: new THREE.Color(0xa67c52) },
+    uColorC: { value: new THREE.Color(0xf5f0e8) }
+  };
+
+  var material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: [
+      'varying vec2 vUv;',
+      'void main(){',
+      '  vUv = uv;',
+      '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'precision highp float;',
+      'uniform float uTime;',
+      'uniform vec2 uResolution;',
+      'uniform vec3 uColorA;',
+      'uniform vec3 uColorB;',
+      'uniform vec3 uColorC;',
+      'varying vec2 vUv;',
+
+      'vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }',
+      'vec4 mod289(vec4 x){ return x - floor(x * (1.0/289.0)) * 289.0; }',
+      'vec4 permute(vec4 x){ return mod289(((x*34.0)+1.0)*x); }',
+      'vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }',
+
+      'float snoise(vec3 v){',
+      '  const vec2 C = vec2(1.0/6.0, 1.0/3.0);',
+      '  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);',
+      '  vec3 i  = floor(v + dot(v, C.yyy));',
+      '  vec3 x0 = v - i + dot(i, C.xxx);',
+      '  vec3 g = step(x0.yzx, x0.xyz);',
+      '  vec3 l = 1.0 - g;',
+      '  vec3 i1 = min(g.xyz, l.zxy);',
+      '  vec3 i2 = max(g.xyz, l.zxy);',
+      '  vec3 x1 = x0 - i1 + C.xxx;',
+      '  vec3 x2 = x0 - i2 + C.yyy;',
+      '  vec3 x3 = x0 - D.yyy;',
+      '  i = mod289(i);',
+      '  vec4 p = permute(permute(permute(',
+      '            i.z + vec4(0.0, i1.z, i2.z, 1.0))',
+      '          + i.y + vec4(0.0, i1.y, i2.y, 1.0))',
+      '          + i.x + vec4(0.0, i1.x, i2.x, 1.0));',
+      '  float n_ = 0.142857142857;',
+      '  vec3 ns = n_ * D.wyz - D.xzx;',
+      '  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);',
+      '  vec4 x_ = floor(j * ns.z);',
+      '  vec4 y_ = floor(j - 7.0 * x_);',
+      '  vec4 x = x_ * ns.x + ns.yyyy;',
+      '  vec4 y = y_ * ns.x + ns.yyyy;',
+      '  vec4 h = 1.0 - abs(x) - abs(y);',
+      '  vec4 b0 = vec4(x.xy, y.xy);',
+      '  vec4 b1 = vec4(x.zw, y.zw);',
+      '  vec4 s0 = floor(b0) * 2.0 + 1.0;',
+      '  vec4 s1 = floor(b1) * 2.0 + 1.0;',
+      '  vec4 sh = -step(h, vec4(0.0));',
+      '  vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;',
+      '  vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;',
+      '  vec3 p0 = vec3(a0.xy, h.x);',
+      '  vec3 p1 = vec3(a0.zw, h.y);',
+      '  vec3 p2 = vec3(a1.xy, h.z);',
+      '  vec3 p3 = vec3(a1.zw, h.w);',
+      '  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));',
+      '  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;',
+      '  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);',
+      '  m = m * m;',
+      '  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));',
+      '}',
+
+      'void main(){',
+      '  vec2 uv = vUv;',
+      '  float aspect = uResolution.x / max(uResolution.y, 1.0);',
+      '  vec2 p = vec2(uv.x * aspect, uv.y);',
+      '  float t = uTime * 0.05;',
+      '  float n1 = snoise(vec3(p * 1.2, t));',
+      '  float n2 = snoise(vec3(p * 2.1 + 4.0, t * 1.3));',
+      '  float mixA = smoothstep(-0.4, 0.6, n1);',
+      '  vec3 col = mix(uColorA, uColorB, mixA);',
+      '  float mixB = smoothstep(0.0, 0.75, n2);',
+      '  col = mix(col, uColorC, mixB * 0.55);',
+      '  gl_FragColor = vec4(col, 1.0);',
+      '}'
+    ].join('\n')
+  });
+
+  var plane = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 1, 1), material);
+  scene.add(plane);
+
+  function resize(){
+    var w = heroSection.clientWidth;
+    var h = heroSection.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    uniforms.uResolution.value.set(w, h);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var clock = new THREE.Clock();
+  var camX = 0, camY = 0;
+  var isVisible = true;
+  var rafId = null;
+
+  function renderFrame(){
+    uniforms.uTime.value = clock.getElapsedTime();
+
+    var targetX = window.TH.mouseX || 0;
+    var targetY = window.TH.mouseY || 0;
+
+    camX += (targetX * 0.6 - camX) * 0.04;
+    camY += (targetY * 0.4 - camY) * 0.04;
+
+    camera.position.x = camX;
+    camera.position.y = camY;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  }
+
+  function loop(){
+    if (!isVisible) { rafId = null; return; }
+    renderFrame();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  if (reduceMotion) {
+    renderFrame();
+  } else if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries){
+      isVisible = entries[0].isIntersecting;
+      if (isVisible && rafId === null) {
+        rafId = requestAnimationFrame(loop);
+      }
+    }, { threshold: 0 });
+    observer.observe(heroSection);
+  } else {
+    rafId = requestAnimationFrame(loop);
+  }
+
+} catch (err) {
+  console.error('TH hero shader failed to initialize; CSS gradient fallback remains visible:', err);
+}
 </script>
 
 </body>
